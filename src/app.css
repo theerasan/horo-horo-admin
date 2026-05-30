@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light dark;
+}
+
+button,
+a,
+[role="button"],
+select,
+label[for] {
+  cursor: pointer;
+}
