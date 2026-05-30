@@ -13,3 +13,471 @@ select,
 label[for] {
   cursor: pointer;
 }
+
+/* ─── Typography ─────────────────────────────────── */
+.page-title {
+  @apply text-2xl font-bold text-gray-900 dark:text-white;
+}
+
+.page-subtitle {
+  @apply text-gray-500 dark:text-gray-400 mt-1;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+}
+
+/* ─── Cards / Panels ─────────────────────────────── */
+.card {
+  @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800;
+}
+
+.card-padded {
+  @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6;
+}
+
+/* ─── Form inputs ────────────────────────────────── */
+.form-input {
+  @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+    bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+    focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition;
+}
+
+.search-input {
+  @apply w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+    bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm
+    focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition;
+}
+
+/* ─── Buttons ────────────────────────────────────── */
+.btn-primary {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
+    bg-gradient-to-r from-violet-500 to-purple-600
+    hover:from-violet-600 hover:to-purple-700 text-white text-sm font-semibold
+    shadow-md hover:shadow-lg transition-all;
+}
+
+.btn-cancel {
+  @apply flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+    text-sm text-gray-700 dark:text-gray-300
+    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors;
+}
+
+.btn-pagination {
+  @apply px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700
+    text-sm text-gray-600 dark:text-gray-400
+    hover:bg-gray-50 dark:hover:bg-gray-800
+    disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
+}
+
+/* ─── Alerts ─────────────────────────────────────── */
+.alert-error {
+  @apply bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800
+    text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm;
+}
+
+.alert-success {
+  @apply bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800
+    text-emerald-700 dark:text-emerald-400 rounded-xl px-4 py-3 text-sm;
+}
+
+/* ─── Badge / Pill ───────────────────────────────── */
+.badge {
+  @apply inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* ─── Modal ──────────────────────────────────────── */
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+}
+
+.modal-backdrop {
+  @apply absolute inset-0 bg-black/50 backdrop-blur-sm;
+}
+
+.modal-card {
+  @apply relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl
+    border border-gray-100 dark:border-gray-800 w-full max-w-sm p-6;
+}
+
+/* ─── Table ──────────────────────────────────────── */
+.table-th {
+  @apply text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400
+    uppercase tracking-wide;
+}
+
+.table-row {
+  @apply hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors;
+}
+
+/* ─── Loading spinner ────────────────────────────── */
+.spinner-center {
+  @apply flex items-center justify-center h-64;
+}
+
+/* ─── Avatar ─────────────────────────────────────── */
+.user-avatar {
+  @apply w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-purple-500
+    flex items-center justify-center text-white text-sm font-bold shrink-0;
+}
+
+/* ═══════════════════════════════════════════════════
+   TYPOGRAPHY SYSTEM
+   ═══════════════════════════════════════════════════ */
+
+/* ─── Headings ───────────────────────────────────── */
+
+/* Page-level h1 — already .page-title */
+/* .page-title { @apply text-2xl font-bold text-gray-900 dark:text-white; } */
+
+.text-heading-xl {
+  /* Section or card h1 */
+  @apply text-xl font-bold text-gray-900 dark:text-white;
+}
+
+.text-heading-lg {
+  /* Dialog / panel title */
+  @apply text-lg font-semibold text-gray-900 dark:text-white;
+}
+
+.text-heading-sm {
+  /* Card section heading */
+  @apply font-semibold text-gray-900 dark:text-white;
+}
+
+/* ─── Body text ──────────────────────────────────── */
+
+.text-body {
+  /* Default readable text */
+  @apply text-sm text-gray-900 dark:text-white;
+}
+
+.text-body-medium {
+  /* Slightly emphasised body */
+  @apply text-sm font-medium text-gray-900 dark:text-white;
+}
+
+.text-body-semibold {
+  /* Bolder body — token balances, counts */
+  @apply text-sm font-semibold text-gray-900 dark:text-white;
+}
+
+/* ─── Muted / secondary text ─────────────────────── */
+
+.text-muted {
+  /* Standard supporting text */
+  @apply text-sm text-gray-500 dark:text-gray-400;
+}
+
+.text-muted-secondary {
+  /* Slightly darker muted — descriptions, features */
+  @apply text-sm text-gray-600 dark:text-gray-400;
+}
+
+.text-caption {
+  /* Tiny helper text, metadata, UIDs */
+  @apply text-xs text-gray-500 dark:text-gray-400;
+}
+
+.text-caption-medium {
+  /* Small label above a stat */
+  @apply text-xs font-medium text-gray-500 dark:text-gray-400;
+}
+
+.text-overline {
+  /* ALL CAPS micro-labels (table headers, section tags) */
+  @apply text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide;
+}
+
+/* ─── Stat / metric display ──────────────────────── */
+
+.stat-label {
+  /* Label above a number — "Current Balance", "Total Added" */
+  @apply text-xs font-medium text-gray-500 dark:text-gray-400 mb-1;
+}
+
+.stat-value {
+  /* Big number */
+  @apply text-2xl font-bold text-gray-900 dark:text-white;
+}
+
+.stat-unit {
+  /* Unit below number — "tokens" */
+  @apply text-xs text-gray-500 dark:text-gray-400;
+}
+
+.stat-card {
+  /* Container for a single stat */
+  @apply bg-gray-50 dark:bg-gray-800 rounded-xl p-4;
+}
+
+/* ─── Table cells ────────────────────────────────── */
+
+.table-td {
+  /* Standard data cell padding */
+  @apply px-6 py-4;
+}
+
+.table-td-sm {
+  /* Tighter cell for denser tables */
+  @apply px-6 py-3.5;
+}
+
+/* ─── Form layout ────────────────────────────────── */
+
+.form-group {
+  /* Wraps label + input */
+  @apply space-y-1.5;
+}
+
+/* ─── Dialog ─────────────────────────────────────── */
+
+.dialog-title {
+  /* Modal / sheet heading */
+  @apply text-lg font-semibold text-gray-900 dark:text-white;
+}
+
+.dialog-body {
+  /* Modal descriptive text */
+  @apply text-sm text-gray-500 dark:text-gray-400 text-center;
+}
+
+/* ─── Component patterns ─────────────────────────── */
+
+.stat-number {
+  /* Large dashboard stat number */
+  @apply text-3xl font-bold text-gray-900 dark:text-white;
+}
+
+.stat-header {
+  /* Row with label + icon inside a stat card */
+  @apply flex items-center justify-between mb-3;
+}
+
+.card-section-header {
+  /* Row with title + "View all" link */
+  @apply flex items-center justify-between mb-5;
+}
+
+.icon-box {
+  /* Colored icon container — add bg color inline */
+  @apply w-9 h-9 rounded-xl flex items-center justify-center;
+}
+
+/* ─── Login page ─────────────────────────────────── */
+.login-page {
+  @apply min-h-screen flex items-center justify-center
+    bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50
+    dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4;
+}
+.login-brand-icon {
+  @apply inline-flex items-center justify-center w-14 h-14
+    rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg mb-4;
+}
+.input-toggle {
+  @apply absolute right-3 top-1/2 -translate-y-1/2
+    text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors;
+}
+.btn-submit {
+  @apply w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+    bg-gradient-to-r from-violet-500 to-purple-600
+    hover:from-violet-600 hover:to-purple-700 text-white text-sm font-semibold
+    shadow-md hover:shadow-lg transition-all
+    disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+/* ─── App layout / sidebar ───────────────────────── */
+.app-layout {
+  @apply flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950;
+}
+.sidebar {
+  @apply w-64 flex flex-col bg-white dark:bg-gray-900
+    border-r border-gray-100 dark:border-gray-800 shrink-0;
+}
+.sidebar-logo {
+  @apply flex items-center gap-3 px-6 py-5
+    border-b border-gray-100 dark:border-gray-800;
+}
+.sidebar-logo-icon {
+  @apply w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600
+    flex items-center justify-center shadow-sm;
+}
+.sidebar-nav {
+  @apply flex-1 px-3 py-4 space-y-1;
+}
+.sidebar-footer {
+  @apply px-3 py-4 border-t border-gray-100 dark:border-gray-800 space-y-2;
+}
+.sidebar-menu-btn {
+  @apply w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm
+    text-gray-600 dark:text-gray-400
+    hover:bg-gray-50 dark:hover:bg-gray-800
+    hover:text-gray-900 dark:hover:text-white transition-all;
+}
+.sidebar-profile-btn {
+  @apply w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+    hover:bg-gray-50 dark:hover:bg-gray-800 transition-all;
+}
+.sidebar-dropdown {
+  @apply absolute bottom-full left-0 right-0 mb-2
+    bg-white dark:bg-gray-800 rounded-xl shadow-lg
+    border border-gray-100 dark:border-gray-700 overflow-hidden z-20;
+}
+.sidebar-dropdown-header {
+  @apply px-4 py-3 border-b border-gray-100 dark:border-gray-700;
+}
+.sidebar-logout-btn {
+  @apply w-full flex items-center gap-3 px-4 py-3 text-sm
+    text-red-600 dark:text-red-400
+    hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors;
+}
+
+/* ─── Breadcrumb ─────────────────────────────────── */
+.breadcrumb {
+  @apply flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6;
+}
+
+/* ─── Links ──────────────────────────────────────── */
+.link-violet {
+  @apply text-sm text-violet-600 dark:text-violet-400
+    hover:text-violet-700 dark:hover:text-violet-300 font-medium;
+}
+.link-more {
+  @apply text-sm text-violet-600 dark:text-violet-400 hover:underline;
+}
+.uid-link {
+  @apply text-sm text-violet-600 dark:text-violet-400
+    hover:underline font-mono truncate block max-w-[160px];
+}
+
+/* ─── Large avatar ───────────────────────────────── */
+.user-avatar-lg {
+  @apply w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600
+    flex items-center justify-center text-white text-2xl font-bold;
+}
+
+/* ─── Action buttons (outlined, icon + text) ─────── */
+.btn-action-emerald {
+  @apply flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors
+    bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400
+    border border-emerald-200 dark:border-emerald-800
+    hover:bg-emerald-100 dark:hover:bg-emerald-950/50;
+}
+.btn-action-violet {
+  @apply flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors
+    bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400
+    border border-violet-200 dark:border-violet-800
+    hover:bg-violet-100 dark:hover:bg-violet-950/50;
+}
+.btn-action-danger {
+  @apply flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors
+    bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400
+    border border-red-200 dark:border-red-800
+    hover:bg-red-100 dark:hover:bg-red-950/50;
+}
+
+/* ─── Filled buttons ─────────────────────────────── */
+.btn-solid {
+  @apply px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700
+    text-white text-sm font-medium transition-colors;
+}
+.btn-save {
+  @apply px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700
+    text-white text-sm font-medium disabled:opacity-60 transition-colors
+    flex items-center gap-2;
+}
+.btn-cancel-sm {
+  @apply px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+    text-sm text-gray-700 dark:text-gray-300
+    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors;
+}
+.btn-danger {
+  @apply flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600
+    text-white text-sm font-medium disabled:opacity-60 transition-colors;
+}
+.btn-emerald {
+  @apply flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600
+    text-white text-sm font-medium disabled:opacity-60 transition-colors
+    flex items-center justify-center gap-2;
+}
+.btn-submit-dialog {
+  @apply flex-1 py-2.5 rounded-xl text-white text-sm font-semibold
+    bg-gradient-to-r from-violet-500 to-purple-600
+    hover:from-violet-600 hover:to-purple-700
+    disabled:opacity-60 transition-all flex items-center justify-center gap-2;
+}
+
+/* ─── Card structure ─────────────────────────────── */
+.card-header {
+  @apply px-6 py-5 border-b border-gray-100 dark:border-gray-800
+    flex items-center justify-between;
+}
+.card-footer {
+  @apply flex items-center justify-between px-6 py-4
+    border-t border-gray-100 dark:border-gray-800;
+}
+
+/* ─── List rows ──────────────────────────────────── */
+.list-item {
+  @apply flex items-center gap-3 p-3 rounded-xl
+    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors;
+}
+.activity-item {
+  @apply flex items-center gap-3 p-3 rounded-xl
+    bg-gray-50 dark:bg-gray-800/50;
+}
+.empty-list-text {
+  @apply text-sm text-gray-500 dark:text-gray-400 text-center py-6;
+}
+
+/* ─── Table utilities ────────────────────────────── */
+.table-empty-cell {
+  @apply px-6 py-12 text-center text-gray-500 dark:text-gray-400 text-sm;
+}
+
+/* ─── User UID display ───────────────────────────── */
+.uid-section {
+  @apply mt-4 pt-4 border-t border-gray-100 dark:border-gray-800;
+}
+.uid-text {
+  @apply text-xs text-gray-400 dark:text-gray-500 font-mono break-all;
+}
+
+/* ─── Stat values (colored) ──────────────────────── */
+.stat-value-emerald {
+  @apply text-2xl font-bold text-emerald-600 dark:text-emerald-400;
+}
+.stat-value-danger {
+  @apply text-2xl font-bold text-red-500 dark:text-red-400;
+}
+
+/* ─── Dialog icon ────────────────────────────────── */
+.dialog-icon-danger {
+  @apply flex items-center justify-center w-12 h-12 rounded-full
+    bg-red-100 dark:bg-red-950/50 mx-auto mb-4;
+}
+
+/* ─── Dropdown ───────────────────────────────────── */
+.dropdown-menu {
+  @apply absolute z-10 left-0 right-0 top-full mt-1
+    bg-white dark:bg-gray-800 rounded-xl
+    border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden;
+}
+.dropdown-item {
+  @apply w-full flex items-center gap-3 px-4 py-3
+    hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left;
+}
+
+/* ─── Inline tokens / accents ────────────────────── */
+
+.text-violet {
+  @apply text-violet-600 dark:text-violet-400;
+}
+
+.text-emerald {
+  @apply text-emerald-600 dark:text-emerald-400;
+}
+
+.text-danger {
+  @apply text-red-500 dark:text-red-400;
+}

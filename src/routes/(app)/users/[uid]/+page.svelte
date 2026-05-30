@@ -5,6 +5,7 @@
   import type { User, PaginatedHistory, AdminUpdateUserRequest } from '$lib/types';
   import { onMount } from 'svelte';
   import { ApiError } from '$lib/api';
+  import { USER_DETAIL, DELETE_DIALOG, ADD_TOKENS_USER_DIALOG, TOKEN_HISTORY, GENERIC } from '$lib/strings';
 
   const uid = $derived($page.params.uid);
 
@@ -48,7 +49,7 @@
         listUserTokenHistory(uid, 1)
       ]);
     } catch (e: any) {
-      error = e.message ?? 'Failed to load user';
+      error = e.message ?? USER_DETAIL.loadFallbackError;
     } finally {
       loading = false;
     }
@@ -74,10 +75,10 @@
     try {
       user = await updateUser(uid, editForm) as User;
       editing = false;
-      saveSuccess = 'Profile updated successfully!';
+      saveSuccess = USER_DETAIL.saveSuccess;
       setTimeout(() => saveSuccess = '', 3000);
     } catch (e: any) {
-      saveError = e.message ?? 'Failed to save changes';
+      saveError = e.message ?? USER_DETAIL.saveFallbackError;
     } finally {
       saving = false;
     }
@@ -89,7 +90,7 @@
       await deleteUser(uid);
       goto('/users');
     } catch (e: any) {
-      error = e.message ?? 'Failed to delete user';
+      error = e.message ?? USER_DETAIL.deleteFallbackError;
       showDeleteDialog = false;
     } finally {
       deleting = false;
@@ -104,13 +105,12 @@
       showAddTokens = false;
       tokenAmount = 10;
       tokenDescription = '';
-      // Reload to get updated balance + history
       [user, history] = await Promise.all([
         getUser(uid),
         listUserTokenHistory(uid, histPage)
       ]);
     } catch (e: any) {
-      tokenError = e.message ?? 'Failed to add tokens';
+      tokenError = e.message ?? ADD_TOKENS_USER_DIALOG.errorFallback;
     } finally {
       addingTokens = false;
     }
@@ -141,44 +141,42 @@
 
 <div class="p-8">
   <!-- Breadcrumb -->
-  <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-    <a href="/users" class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors">Users</a>
+  <div class="breadcrumb">
+    <a href="/users" class="hover:text-violet-600 dark:hover:text-violet-400 transition-colors">{USER_DETAIL.breadcrumbParent}</a>
     <span>/</span>
-    <span class="text-gray-900 dark:text-white">User Detail</span>
+    <span class="text-gray-900 dark:text-white">{USER_DETAIL.breadcrumbCurrent}</span>
   </div>
 
   {#if loading}
-    <div class="flex items-center justify-center h-64">
+    <div class="spinner-center">
       <svg class="animate-spin w-7 h-7 text-violet-500" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
     </div>
   {:else if error}
-    <div class="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-2xl p-6 text-sm">{error}</div>
+    <div class="alert-error">{error}</div>
   {:else if user}
     <div class="space-y-6">
       <!-- Profile card -->
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+      <div class="card-padded">
         <div class="flex items-start justify-between mb-6">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+            <div class="user-avatar-lg">
               {(user.display_name || user.email || 'G')[0].toUpperCase()}
             </div>
             <div>
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">{user.display_name || 'No display name'}</h1>
-              <p class="text-gray-500 dark:text-gray-400 text-sm">{user.is_guest ? 'Guest user' : user.email}</p>
+              <h1 class="text-heading-xl">{user.display_name || USER_DETAIL.noDisplayName}</h1>
+              <p class="text-muted">{user.is_guest ? USER_DETAIL.guestUser : user.email}</p>
               <div class="flex items-center gap-2 mt-2">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
+                <span class="badge bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
                   {user.role.replace('_', ' ')}
                 </span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {tierColors[user.tier] ?? tierColors.free}">
+                <span class="badge {tierColors[user.tier] ?? tierColors.free}">
                   {user.tier}
                 </span>
                 {#if user.is_guest}
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    guest
-                  </span>
+                  <span class="badge bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{USER_DETAIL.guestLabel}</span>
                 {/if}
               </div>
             </div>
@@ -186,38 +184,38 @@
           <div class="flex items-center gap-2">
             <button
               onclick={() => showAddTokens = true}
-              class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors"
+              class="btn-action-emerald"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              Add Tokens
+              {USER_DETAIL.addTokensButton}
             </button>
             {#if !editing}
               <button
                 onclick={startEdit}
-                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800 text-sm font-medium hover:bg-violet-100 dark:hover:bg-violet-950/50 transition-colors"
+                class="btn-action-violet"
               >
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
-                Edit
+                {USER_DETAIL.editButton}
               </button>
               <button
                 onclick={() => showDeleteDialog = true}
-                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors"
+                class="btn-action-danger"
               >
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
-                Delete
+                {USER_DETAIL.deleteButton}
               </button>
             {/if}
           </div>
         </div>
 
         {#if saveSuccess}
-          <div class="mb-4 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl px-4 py-3 text-sm">
+          <div class="alert-success flex items-center gap-2 mb-4">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
@@ -229,42 +227,28 @@
           <!-- Edit form -->
           <div class="space-y-4">
             {#if saveError}
-              <div class="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">{saveError}</div>
+              <div class="alert-error">{saveError}</div>
             {/if}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="space-y-1.5">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
-                <input
-                  type="text"
-                  bind:value={editForm.display_name}
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-                />
+                <label class="form-label">{USER_DETAIL.fieldDisplayName}</label>
+                <input type="text" bind:value={editForm.display_name} class="form-input" />
               </div>
               <div class="space-y-1.5">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                <input
-                  type="email"
-                  bind:value={editForm.email}
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-                />
+                <label class="form-label">{USER_DETAIL.fieldEmail}</label>
+                <input type="email" bind:value={editForm.email} class="form-input" />
               </div>
               <div class="space-y-1.5">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                <select
-                  bind:value={editForm.role}
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-                >
+                <label class="form-label">{USER_DETAIL.fieldRole}</label>
+                <select bind:value={editForm.role} class="form-input">
                   <option value="user">user</option>
                   <option value="admin">admin</option>
                   <option value="back_office">back_office</option>
                 </select>
               </div>
               <div class="space-y-1.5">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tier</label>
-                <select
-                  bind:value={editForm.tier}
-                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-                >
+                <label class="form-label">{USER_DETAIL.fieldTier}</label>
+                <select bind:value={editForm.tier} class="form-input">
                   <option value="free">free</option>
                   <option value="pro">pro</option>
                   <option value="premium">premium</option>
@@ -275,7 +259,7 @@
               <button
                 onclick={saveEdit}
                 disabled={saving}
-                class="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium disabled:opacity-60 transition-colors flex items-center gap-2"
+                class="btn-save"
               >
                 {#if saving}
                   <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -283,52 +267,49 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
                 {/if}
-                Save changes
+                {USER_DETAIL.saveButton}
               </button>
-              <button
-                onclick={() => editing = false}
-                class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                Cancel
+              <button onclick={() => editing = false} class="btn-cancel-sm">
+                {USER_DETAIL.cancelEdit}
               </button>
             </div>
           </div>
         {:else}
           <!-- Info display -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Current Balance</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{user.token}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">tokens</p>
+            <div class="stat-card">
+              <p class="stat-label">{USER_DETAIL.statBalance}</p>
+              <p class="stat-value">{user.token}</p>
+              <p class="stat-unit">{USER_DETAIL.statUnit}</p>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Added</p>
-              <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{user.tokens_added ?? 0}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">tokens</p>
+            <div class="stat-card">
+              <p class="stat-label">{USER_DETAIL.statAdded}</p>
+              <p class="stat-value-emerald">{user.tokens_added ?? 0}</p>
+              <p class="stat-unit">{USER_DETAIL.statUnit}</p>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Used</p>
-              <p class="text-2xl font-bold text-red-500 dark:text-red-400">{user.tokens_used ?? 0}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">tokens</p>
+            <div class="stat-card">
+              <p class="stat-label">{USER_DETAIL.statUsed}</p>
+              <p class="stat-value-danger">{user.tokens_used ?? 0}</p>
+              <p class="stat-unit">{USER_DETAIL.statUnit}</p>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Joined</p>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{formatDate(user.created_at)}</p>
+            <div class="stat-card">
+              <p class="stat-label">{USER_DETAIL.statJoined}</p>
+              <p class="text-body-semibold">{formatDate(user.created_at)}</p>
             </div>
           </div>
 
-          <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <p class="text-xs text-gray-400 dark:text-gray-500 font-mono break-all">UID: {user.uid}</p>
+          <div class="uid-section">
+            <p class="uid-text">{USER_DETAIL.uidPrefix} {user.uid}</p>
           </div>
         {/if}
       </div>
 
       <!-- Token history -->
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <h2 class="font-semibold text-gray-900 dark:text-white">Token History</h2>
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <h2 class="text-heading-sm">{USER_DETAIL.historyTitle}</h2>
           {#if history}
-            <span class="text-sm text-gray-500 dark:text-gray-400">{history.total} events</span>
+            <span class="text-muted">{USER_DETAIL.historyEventsLabel(history.total)}</span>
           {/if}
         </div>
 
@@ -343,61 +324,53 @@
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-50 dark:border-gray-800">
-                <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Feature</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Description</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</th>
+                <th class="table-th">{TOKEN_HISTORY.colType}</th>
+                <th class="table-th">{TOKEN_HISTORY.colAmount}</th>
+                <th class="table-th">{TOKEN_HISTORY.colFeature}</th>
+                <th class="table-th">{TOKEN_HISTORY.colDescription}</th>
+                <th class="table-th">{TOKEN_HISTORY.colDate}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
               {#each (history?.data ?? []) as item}
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                  <td class="px-6 py-3.5">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium
+                <tr class="table-row">
+                  <td class="table-td-sm">
+                    <span class="badge
                       {item.type === 'add'
                         ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400'
                         : 'bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400'}">
-                      {item.type === 'add' ? '↑ add' : '↓ use'}
+                      {item.type === 'add' ? TOKEN_HISTORY.typeAdd : TOKEN_HISTORY.typeUse}
                     </span>
                   </td>
-                  <td class="px-6 py-3.5">
+                  <td class="table-td-sm">
                     <span class="text-sm font-bold {item.type === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}">
                       {item.type === 'add' ? '+' : ''}{item.amount}
                     </span>
                   </td>
-                  <td class="px-6 py-3.5">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">{item.feature ?? '—'}</span>
+                  <td class="table-td-sm">
+                    <span class="text-muted-secondary">{item.feature ?? '—'}</span>
                   </td>
-                  <td class="px-6 py-3.5">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">{item.description ?? '—'}</span>
+                  <td class="table-td-sm">
+                    <span class="text-muted-secondary">{item.description ?? '—'}</span>
                   </td>
-                  <td class="px-6 py-3.5">
-                    <span class="text-sm text-gray-500 dark:text-gray-400">{formatDate(item.created_at)}</span>
+                  <td class="table-td-sm">
+                    <span class="text-muted">{formatDate(item.created_at)}</span>
                   </td>
                 </tr>
               {:else}
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400 text-sm">No token history</td>
+                  <td colspan="5" class="table-empty-cell">{USER_DETAIL.noHistory}</td>
                 </tr>
               {/each}
             </tbody>
           </table>
 
           {#if history && history.total_pages > 1}
-            <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-              <p class="text-sm text-gray-500 dark:text-gray-400">Page {histPage} of {history.total_pages}</p>
+            <div class="card-footer">
+              <p class="text-muted">{USER_DETAIL.pageLabel(histPage, history.total_pages)}</p>
               <div class="flex gap-2">
-                <button
-                  onclick={() => loadHistory(histPage - 1)}
-                  disabled={histPage <= 1}
-                  class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                >← Prev</button>
-                <button
-                  onclick={() => loadHistory(histPage + 1)}
-                  disabled={histPage >= history.total_pages}
-                  class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                >Next →</button>
+                <button onclick={() => loadHistory(histPage - 1)} disabled={histPage <= 1} class="btn-pagination">{USER_DETAIL.prevPage}</button>
+                <button onclick={() => loadHistory(histPage + 1)} disabled={histPage >= history.total_pages} class="btn-pagination">{USER_DETAIL.nextPage}</button>
               </div>
             </div>
           {/if}
@@ -409,16 +382,16 @@
 
 <!-- Add Tokens Dialog -->
 {#if showAddTokens}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick={() => showAddTokens = false}></div>
-    <div class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-sm p-6">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Tokens</h3>
+  <div class="modal-overlay">
+    <div class="modal-backdrop" onclick={() => showAddTokens = false}></div>
+    <div class="modal-card">
+      <h3 class="dialog-title mb-4">{ADD_TOKENS_USER_DIALOG.title}</h3>
       {#if tokenError}
-        <div class="mb-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">{tokenError}</div>
+        <div class="alert-error mb-4">{tokenError}</div>
       {/if}
       <div class="space-y-4">
         <div class="space-y-1.5">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+          <label class="form-label">{ADD_TOKENS_USER_DIALOG.amountLabel}</label>
           <div class="flex items-center gap-3">
             {#each [10, 20, 50, 100] as amt}
               <button
@@ -436,29 +409,21 @@
             bind:value={tokenAmount}
             min="1"
             max="10000"
-            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-            placeholder="Custom amount"
+            class="form-input"
+            placeholder={ADD_TOKENS_USER_DIALOG.amountPlaceholder}
           />
         </div>
         <div class="space-y-1.5">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description <span class="text-gray-400">(optional)</span></label>
-          <input
-            type="text"
-            bind:value={tokenDescription}
-            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-            placeholder="e.g. Promotional top-up"
-          />
+          <label class="form-label">{ADD_TOKENS_USER_DIALOG.descriptionLabel} <span class="text-gray-400">{ADD_TOKENS_USER_DIALOG.descriptionOptional}</span></label>
+          <input type="text" bind:value={tokenDescription} class="form-input" placeholder={ADD_TOKENS_USER_DIALOG.descriptionPlaceholder} />
         </div>
       </div>
       <div class="flex gap-3 mt-6">
-        <button
-          onclick={() => showAddTokens = false}
-          class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >Cancel</button>
+        <button onclick={() => showAddTokens = false} class="btn-cancel">{ADD_TOKENS_USER_DIALOG.cancel}</button>
         <button
           onclick={handleAddTokens}
           disabled={addingTokens || tokenAmount < 1}
-          class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+          class="btn-emerald"
         >
           {#if addingTokens}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -466,7 +431,7 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
             </svg>
           {/if}
-          Add {tokenAmount} tokens
+          {ADD_TOKENS_USER_DIALOG.submitButton(tokenAmount)}
         </button>
       </div>
     </div>
@@ -475,20 +440,20 @@
 
 <!-- Delete confirm -->
 {#if showDeleteDialog}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick={() => showDeleteDialog = false}></div>
-    <div class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-sm p-6">
-      <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 mx-auto mb-4">
+  <div class="modal-overlay">
+    <div class="modal-backdrop" onclick={() => showDeleteDialog = false}></div>
+    <div class="modal-card">
+      <div class="dialog-icon-danger">
         <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
       </div>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2">Delete User?</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">This will soft-delete the user. This action can be reversed in the database.</p>
+      <h3 class="dialog-title text-center mb-2">{DELETE_DIALOG.title}</h3>
+      <p class="dialog-body mb-6">{DELETE_DIALOG.message}</p>
       <div class="flex gap-3">
-        <button onclick={() => showDeleteDialog = false} class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-        <button onclick={confirmDelete} disabled={deleting} class="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium disabled:opacity-60 transition-colors">
-          {deleting ? 'Deleting…' : 'Delete'}
+        <button onclick={() => showDeleteDialog = false} class="btn-cancel">{DELETE_DIALOG.cancel}</button>
+        <button onclick={confirmDelete} disabled={deleting} class="btn-danger">
+          {deleting ? DELETE_DIALOG.deleting : DELETE_DIALOG.confirm}
         </button>
       </div>
     </div>

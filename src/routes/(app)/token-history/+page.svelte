@@ -2,6 +2,7 @@
   import { listTokenHistory, listUsers, addTokens } from '$lib/api';
   import type { PaginatedHistory } from '$lib/types';
   import { onMount } from 'svelte';
+  import { TOKEN_HISTORY, ADD_TOKENS_DIALOG, GENERIC } from '$lib/strings';
 
   let data = $state<PaginatedHistory | null>(null);
   let loading = $state(true);
@@ -51,7 +52,6 @@
     });
   }
 
-  // Search users for the "add tokens" dialog
   function onUserSearch() {
     clearTimeout(userSearchTimeout);
     if (userSearchQuery.length < 2) {
@@ -86,7 +86,7 @@
     tokenSuccess = '';
     try {
       const res = await addTokens(selectedUserUid, tokenAmount, tokenDescription);
-      tokenSuccess = `Added ${tokenAmount} tokens to ${selectedUserEmail}. New balance: ${res.current_balance}`;
+      tokenSuccess = ADD_TOKENS_DIALOG.successMessage(tokenAmount, selectedUserEmail, res.current_balance);
       tokenAmount = 10;
       tokenDescription = '';
       selectedUserUid = '';
@@ -117,26 +117,23 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Token History</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">
-        {data ? `${data.total} total events` : 'All token transactions'}
+      <h1 class="page-title">{TOKEN_HISTORY.title}</h1>
+      <p class="page-subtitle">
+        {data ? TOKEN_HISTORY.subtitleCount(data.total) : TOKEN_HISTORY.subtitleFallback}
       </p>
     </div>
-    <button
-      onclick={openDialog}
-      class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all"
-    >
+    <button onclick={openDialog} class="btn-primary">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
-      Add Token
+      {TOKEN_HISTORY.addTokenButton}
     </button>
   </div>
 
   <!-- Table -->
-  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+  <div class="card overflow-hidden">
     {#if loading}
-      <div class="flex items-center justify-center h-64">
+      <div class="spinner-center">
         <svg class="animate-spin w-7 h-7 text-violet-500" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -148,69 +145,61 @@
       <table class="w-full">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-800">
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">User</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Feature</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Description</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</th>
+            <th class="table-th">{TOKEN_HISTORY.colType}</th>
+            <th class="table-th">{TOKEN_HISTORY.colAmount}</th>
+            <th class="table-th">{TOKEN_HISTORY.colUser}</th>
+            <th class="table-th">{TOKEN_HISTORY.colFeature}</th>
+            <th class="table-th">{TOKEN_HISTORY.colDescription}</th>
+            <th class="table-th">{TOKEN_HISTORY.colDate}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
           {#each (data?.data ?? []) as item}
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-              <td class="px-6 py-4">
-                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium
+            <tr class="table-row">
+              <td class="table-td">
+                <span class="badge
                   {item.type === 'add'
                     ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400'
                     : 'bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400'}">
-                  {item.type === 'add' ? '↑ add' : '↓ use'}
+                  {item.type === 'add' ? TOKEN_HISTORY.typeAdd : TOKEN_HISTORY.typeUse}
                 </span>
               </td>
-              <td class="px-6 py-4">
+              <td class="table-td">
                 <span class="text-sm font-bold {item.type === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}">
                   {item.type === 'add' ? '+' : ''}{item.amount}
                 </span>
               </td>
-              <td class="px-6 py-4">
-                <a href="/users/{item.user_uid}" class="text-sm text-violet-600 dark:text-violet-400 hover:underline font-mono truncate block max-w-[160px]">
+              <td class="table-td">
+                <a href="/users/{item.user_uid}" class="uid-link">
                   {item.user_uid}
                 </a>
               </td>
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-600 dark:text-gray-400">{item.feature ?? '—'}</span>
+              <td class="table-td">
+                <span class="text-muted-secondary">{item.feature ?? '—'}</span>
               </td>
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-600 dark:text-gray-400">{item.description ?? '—'}</span>
+              <td class="table-td">
+                <span class="text-muted-secondary">{item.description ?? '—'}</span>
               </td>
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-500 dark:text-gray-400">{formatDate(item.created_at)}</span>
+              <td class="table-td">
+                <span class="text-muted">{formatDate(item.created_at)}</span>
               </td>
             </tr>
           {:else}
             <tr>
-              <td colspan="6" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400 text-sm">No token events yet</td>
+              <td colspan="6" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400 text-sm">{TOKEN_HISTORY.noEvents}</td>
             </tr>
           {/each}
         </tbody>
       </table>
 
       {#if data && data.total_pages > 1}
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+        <div class="card-footer">
+          <p class="text-muted">
             Showing {(page - 1) * limit + 1}–{Math.min(page * limit, data.total)} of {data.total}
           </p>
           <div class="flex gap-2">
-            <button
-              onclick={() => goPage(page - 1)}
-              disabled={page <= 1}
-              class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >← Prev</button>
-            <button
-              onclick={() => goPage(page + 1)}
-              disabled={page >= data.total_pages}
-              class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >Next →</button>
+            <button onclick={() => goPage(page - 1)} disabled={page <= 1} class="btn-pagination">{TOKEN_HISTORY.prevPage}</button>
+            <button onclick={() => goPage(page + 1)} disabled={page >= data.total_pages} class="btn-pagination">{TOKEN_HISTORY.nextPage}</button>
           </div>
         </div>
       {/if}
@@ -220,22 +209,22 @@
 
 <!-- Add Tokens Dialog -->
 {#if showAddTokens}
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick={() => showAddTokens = false}></div>
+  <div class="modal-overlay">
+    <div class="modal-backdrop" onclick={() => showAddTokens = false}></div>
     <div class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 w-full max-w-md p-6">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">Add Token</h3>
+      <h3 class="dialog-title mb-5">{ADD_TOKENS_DIALOG.title}</h3>
 
       {#if tokenError}
-        <div class="mb-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">{tokenError}</div>
+        <div class="alert-error mb-4">{tokenError}</div>
       {/if}
       {#if tokenSuccess}
-        <div class="mb-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl px-4 py-3 text-sm">{tokenSuccess}</div>
+        <div class="alert-success mb-4">{tokenSuccess}</div>
       {/if}
 
       <div class="space-y-4">
         <!-- User search -->
         <div class="space-y-1.5 relative">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select User</label>
+          <label class="form-label">{ADD_TOKENS_DIALOG.selectUserLabel}</label>
           <div class="relative">
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -244,8 +233,8 @@
               type="text"
               bind:value={userSearchQuery}
               oninput={onUserSearch}
-              placeholder="Search by email or name…"
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
+              placeholder={ADD_TOKENS_DIALOG.selectUserPlaceholder}
+              class="search-input"
             />
             {#if searchingUsers}
               <svg class="absolute right-3 top-1/2 -translate-y-1/2 animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
@@ -255,32 +244,32 @@
             {/if}
           </div>
           {#if userSearchResults.length > 0}
-            <div class="absolute z-10 left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
+            <div class="dropdown-menu">
               {#each userSearchResults as u}
                 <button
                   type="button"
                   onclick={() => selectUser(u.uid, u.email)}
-                  class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                  class="dropdown-item"
                 >
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  <div class="user-avatar">
                     {(u.display_name || u.email || 'U')[0].toUpperCase()}
                   </div>
                   <div class="min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{u.display_name || 'No name'}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email}</p>
+                    <p class="text-body-medium truncate">{u.display_name || GENERIC.noName}</p>
+                    <p class="text-caption truncate">{u.email}</p>
                   </div>
                 </button>
               {/each}
             </div>
           {/if}
           {#if selectedUserUid}
-            <p class="text-xs text-emerald-600 dark:text-emerald-400">✓ Selected: {selectedUserEmail}</p>
+            <p class="text-xs text-emerald-600 dark:text-emerald-400">{ADD_TOKENS_DIALOG.selectedPrefix} {selectedUserEmail}</p>
           {/if}
         </div>
 
         <!-- Amount -->
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+          <label class="form-label">{ADD_TOKENS_DIALOG.amountLabel}</label>
           <div class="flex gap-2">
             {#each [10, 20, 50, 100] as amt}
               <button
@@ -298,32 +287,29 @@
             bind:value={tokenAmount}
             min="1"
             max="10000"
-            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-            placeholder="Custom amount"
+            class="form-input"
+            placeholder={ADD_TOKENS_DIALOG.amountPlaceholder}
           />
         </div>
 
         <!-- Description -->
         <div class="space-y-1.5">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description <span class="text-gray-400">(optional)</span></label>
+          <label class="form-label">{ADD_TOKENS_DIALOG.descriptionLabel} <span class="text-gray-400">{ADD_TOKENS_DIALOG.descriptionOptional}</span></label>
           <input
             type="text"
             bind:value={tokenDescription}
-            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"
-            placeholder="e.g. Promotional top-up"
+            class="form-input"
+            placeholder={ADD_TOKENS_DIALOG.descriptionPlaceholder}
           />
         </div>
       </div>
 
       <div class="flex gap-3 mt-6">
-        <button
-          onclick={() => showAddTokens = false}
-          class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >Cancel</button>
+        <button onclick={() => showAddTokens = false} class="btn-cancel">{ADD_TOKENS_DIALOG.cancel}</button>
         <button
           onclick={handleAddTokens}
           disabled={addingTokens || !selectedUserUid || tokenAmount < 1}
-          class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-sm font-semibold disabled:opacity-60 transition-all flex items-center justify-center gap-2"
+          class="btn-submit-dialog"
         >
           {#if addingTokens}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -331,7 +317,7 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
             </svg>
           {/if}
-          Add {tokenAmount} tokens
+          {ADD_TOKENS_DIALOG.submitButton(tokenAmount)}
         </button>
       </div>
     </div>
