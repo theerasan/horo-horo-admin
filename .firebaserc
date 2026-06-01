@@ -1,5 +1,5 @@
 {
   "projects": {
-    "staging": "horo-horo-admin-staging"
+    "default": "horo-horo-admin"
   }
 }
