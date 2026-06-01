@@ -1,6 +1,27 @@
 export type UserRole = 'user' | 'admin' | 'back_office';
 export type UserTier = 'free' | 'pro' | 'premium';
 
+export interface UserProfile {
+  user_id: string;
+  display_name: string;
+  birth_date: string | null;
+  time_of_birth: string | null;
+  gender: string;
+  gender_preference: string;
+  place_of_birth: string;
+  latitude: number;
+  longitude: number;
+  element: string;
+  planet: string;
+  mbti: string;
+  enneagram: number | null;
+  enneagram_wing: number | null;
+  onboarding_step: number;
+  onboarding_complete: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   uid: string;
   email: string;
@@ -13,6 +34,10 @@ export interface User {
   updated_at: string;
   tokens_added?: number;
   tokens_used?: number;
+  oauth_provider?: string;
+  oauth_id?: string;
+  deleted_at?: string | null;
+  profile?: UserProfile | null;
 }
 
 export interface PaginatedUsers {

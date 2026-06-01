@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { getUser, updateUser, deleteUser, addTokens, listUserTokenHistory } from '$lib/api';
-  import type { User, PaginatedHistory, AdminUpdateUserRequest } from '$lib/types';
+  import { getUser, updateUser, deleteUser, purgeUser, addTokens, listUserTokenHistory } from '$lib/api';
+  import type { User, UserProfile, PaginatedHistory, AdminUpdateUserRequest } from '$lib/types';
   import { onMount } from 'svelte';
   import { ApiError } from '$lib/api';
   import { USER_DETAIL, DELETE_DIALOG, ADD_TOKENS_USER_DIALOG, TOKEN_HISTORY, GENERIC } from '$lib/strings';
@@ -24,6 +24,10 @@
   // Delete state
   let showDeleteDialog = $state(false);
   let deleting = $state(false);
+
+  // Purge state
+  let showPurgeDialog = $state(false);
+  let purging = $state(false);
 
   // Add tokens state
   let showAddTokens = $state(false);
@@ -94,6 +98,19 @@
       showDeleteDialog = false;
     } finally {
       deleting = false;
+    }
+  }
+
+  async function confirmPurge() {
+    purging = true;
+    try {
+      await purgeUser(uid);
+      goto('/users');
+    } catch (e: any) {
+      error = e.message ?? 'Failed to permanently delete user';
+      showPurgeDialog = false;
+    } finally {
+      purging = false;
     }
   }
 
@@ -178,6 +195,12 @@
                 {#if user.is_guest}
                   <span class="badge bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{USER_DETAIL.guestLabel}</span>
                 {/if}
+                {#if user.oauth_provider}
+                  <span class="badge bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 capitalize">{user.oauth_provider}</span>
+                {/if}
+                {#if user.deleted_at}
+                  <span class="badge bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400">Deleted</span>
+                {/if}
               </div>
             </div>
           </div>
@@ -201,15 +224,27 @@
                 </svg>
                 {USER_DETAIL.editButton}
               </button>
-              <button
-                onclick={() => showDeleteDialog = true}
-                class="btn-action-danger"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-                {USER_DETAIL.deleteButton}
-              </button>
+              {#if user.deleted_at}
+                <button
+                  onclick={() => showPurgeDialog = true}
+                  class="btn-action-danger"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  Permanently Delete
+                </button>
+              {:else}
+                <button
+                  onclick={() => showDeleteDialog = true}
+                  class="btn-action-danger"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  {USER_DETAIL.deleteButton}
+                </button>
+              {/if}
             {/if}
           </div>
         </div>
@@ -298,11 +333,85 @@
             </div>
           </div>
 
-          <div class="uid-section">
+          <div class="uid-section space-y-1">
             <p class="uid-text">{USER_DETAIL.uidPrefix} {user.uid}</p>
+            {#if user.email}
+              <p class="uid-text">Email: {user.email}</p>
+            {/if}
+            {#if user.oauth_provider && user.oauth_id}
+              <p class="uid-text">Auth: {user.oauth_provider} · {user.oauth_id}</p>
+            {/if}
           </div>
         {/if}
       </div>
+
+      <!-- Onboarding Profile -->
+      {#if user.profile}
+        {@const p = user.profile}
+        <div class="card-padded">
+          <h2 class="text-heading-sm mb-4">Onboarding Profile</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {#if p.birth_date}
+              <div class="stat-card">
+                <p class="stat-label">Date of Birth</p>
+                <p class="text-body-semibold">{new Date(p.birth_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+            {/if}
+            {#if p.time_of_birth}
+              <div class="stat-card">
+                <p class="stat-label">Time of Birth</p>
+                <p class="text-body-semibold">{p.time_of_birth}</p>
+              </div>
+            {/if}
+            {#if p.place_of_birth}
+              <div class="stat-card">
+                <p class="stat-label">Place of Birth</p>
+                <p class="text-body-semibold">{p.place_of_birth}</p>
+              </div>
+            {/if}
+            {#if p.gender}
+              <div class="stat-card">
+                <p class="stat-label">Gender</p>
+                <p class="text-body-semibold capitalize">{p.gender}</p>
+              </div>
+            {/if}
+            {#if p.gender_preference}
+              <div class="stat-card">
+                <p class="stat-label">Gender Preference</p>
+                <p class="text-body-semibold capitalize">{p.gender_preference}</p>
+              </div>
+            {/if}
+            {#if p.element}
+              <div class="stat-card">
+                <p class="stat-label">Element</p>
+                <p class="text-body-semibold capitalize">{p.element}</p>
+              </div>
+            {/if}
+            {#if p.planet}
+              <div class="stat-card">
+                <p class="stat-label">Ruling Planet</p>
+                <p class="text-body-semibold capitalize">{p.planet}</p>
+              </div>
+            {/if}
+            {#if p.mbti}
+              <div class="stat-card">
+                <p class="stat-label">MBTI</p>
+                <p class="text-body-semibold">{p.mbti}</p>
+              </div>
+            {/if}
+            {#if p.enneagram != null}
+              <div class="stat-card">
+                <p class="stat-label">Enneagram</p>
+                <p class="text-body-semibold">{p.enneagram}{p.enneagram_wing != null ? `w${p.enneagram_wing}` : ''}</p>
+              </div>
+            {/if}
+            <div class="stat-card">
+              <p class="stat-label">Onboarding</p>
+              <p class="text-body-semibold">{p.onboarding_complete ? 'Complete' : `Step ${p.onboarding_step}`}</p>
+            </div>
+          </div>
+        </div>
+      {/if}
 
       <!-- Token history -->
       <div class="card overflow-hidden">
@@ -432,6 +541,28 @@
             </svg>
           {/if}
           {ADD_TOKENS_USER_DIALOG.submitButton(tokenAmount)}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Purge confirm -->
+{#if showPurgeDialog}
+  <div class="modal-overlay">
+    <div class="modal-backdrop" onclick={() => showPurgeDialog = false}></div>
+    <div class="modal-card">
+      <div class="dialog-icon-danger">
+        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+      <h3 class="dialog-title text-center mb-2">Permanently Delete User</h3>
+      <p class="dialog-body mb-6">This will <strong>permanently</strong> remove the user and all associated data from the database. This action <strong>cannot be undone</strong>.</p>
+      <div class="flex gap-3">
+        <button onclick={() => showPurgeDialog = false} class="btn-cancel">Cancel</button>
+        <button onclick={confirmPurge} disabled={purging} class="btn-danger">
+          {purging ? 'Deleting...' : 'Permanently Delete'}
         </button>
       </div>
     </div>

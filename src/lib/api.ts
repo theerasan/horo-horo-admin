@@ -77,6 +77,10 @@ export async function deleteUser(uid: string): Promise<void> {
   await request(`/api/v1/admin/users/${uid}`, { method: 'DELETE' });
 }
 
+export async function purgeUser(uid: string): Promise<void> {
+  await request(`/api/v1/admin/users/${uid}/purge`, { method: 'DELETE' });
+}
+
 // Token management
 export async function addTokens(
   uid: string,

@@ -10,7 +10,12 @@
   let page = $state(1);
   let search = $state('');
   let searchInput = $state('');
+  let showDeleted = $state(true);
   const limit = 20;
+
+  const visibleUsers = $derived(
+    (data?.data ?? []).filter(u => showDeleted || !u.deleted_at)
+  );
 
   async function load() {
     loading = true;
@@ -71,6 +76,18 @@
         {data ? USERS.subtitleCount(data.total) : USERS.subtitleFallback}
       </p>
     </div>
+    <button
+      onclick={() => showDeleted = !showDeleted}
+      class="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-colors
+        {showDeleted
+          ? 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
+          : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      {showDeleted ? 'Hide deleted' : 'Show deleted'}
+    </button>
   </div>
 
   <!-- Search -->
@@ -124,15 +141,16 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
-          {#each (data?.data ?? []) as user}
-            <tr class="table-row">
+          {#each visibleUsers as user}
+            {@const isDeleted = !!user.deleted_at}
+            <tr class="table-row {isDeleted ? 'opacity-50' : ''}">
               <td class="table-td">
                 <div class="flex items-center gap-3">
-                  <div class="user-avatar">
+                  <div class="user-avatar {isDeleted ? 'grayscale' : ''}">
                     {(user.display_name || user.email || 'G')[0].toUpperCase()}
                   </div>
                   <div class="min-w-0">
-                    <p class="text-body-medium truncate max-w-[180px]">
+                    <p class="text-body-medium truncate max-w-[180px] {isDeleted ? 'line-through text-gray-400' : ''}">
                       {#if user.display_name}
                         {user.display_name}
                       {:else}
@@ -140,7 +158,13 @@
                       {/if}
                     </p>
                     <p class="text-caption truncate max-w-[180px]">
-                      {user.is_guest ? '👤 Guest' : user.email}
+                      {#if isDeleted}
+                        <span class="text-red-400 dark:text-red-500">Deleted</span>
+                      {:else if user.is_guest}
+                        👤 Guest
+                      {:else}
+                        {user.email}
+                      {/if}
                     </p>
                   </div>
                 </div>
@@ -162,12 +186,7 @@
                 <span class="text-muted">{formatDate(user.created_at)}</span>
               </td>
               <td class="table-td text-right">
-                <a
-                  href="/users/{user.uid}"
-                  class="link-violet"
-                >
-                  {USERS.viewLink}
-                </a>
+                <a href="/users/{user.uid}" class="link-violet">{USERS.viewLink}</a>
               </td>
             </tr>
           {:else}
