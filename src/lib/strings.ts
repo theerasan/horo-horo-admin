@@ -29,6 +29,18 @@ export const LOGIN = {
   submittingButton: 'Signing in…',
   accessDenied: 'Access denied. Admin or back-office role required.',
   genericError: 'Something went wrong. Please try again.',
+  // Tabs
+  tabPassword: 'Password',
+  tabOtp: 'One-Time Password',
+  // OTP flow
+  otpSendButton: 'Send OTP',
+  otpSendingButton: 'Sending…',
+  otpVerifyButton: 'Verify & Sign in',
+  otpVerifyingButton: 'Verifying…',
+  otpLabel: 'One-Time Password',
+  otpPlaceholder: '123456',
+  otpResend: 'Resend OTP',
+  otpResending: 'Resending…',
 } as const;
 
 // ─── Sidebar / User menu ──────────────────────────

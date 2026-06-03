@@ -83,6 +83,20 @@ export interface LoginResponse {
   expires_in: number;
 }
 
+export interface SendOtpResponse {
+  ref: string;
+  expires_in: number;
+  message: string;
+}
+
+export interface VerifyOtpResponse {
+  token: string;
+  uid: string;
+  email: string;
+  expires_in: number;
+  is_new_user: boolean;
+}
+
 export interface AdminUpdateUserRequest {
   display_name?: string;
   email?: string;

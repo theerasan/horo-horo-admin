@@ -1,6 +1,8 @@
 import { API_BASE_URL } from './env';
 import type {
   LoginResponse,
+  SendOtpResponse,
+  VerifyOtpResponse,
   PaginatedUsers,
   User,
   PaginatedHistory,
@@ -43,6 +45,24 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return request<LoginResponse>('/api/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password })
+  });
+}
+
+export async function sendOtp(email: string): Promise<SendOtpResponse> {
+  return request<SendOtpResponse>('/api/v1/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  });
+}
+
+export async function verifyOtp(
+  email: string,
+  otp: string,
+  ref: string
+): Promise<VerifyOtpResponse> {
+  return request<VerifyOtpResponse>('/api/v1/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp, ref })
   });
 }
 
