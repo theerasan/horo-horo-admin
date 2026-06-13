@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { listUsers } from '$lib/api';
+  import { listUsers, deleteUser, purgeUser } from '$lib/api';
   import type { PaginatedUsers } from '$lib/types';
   import { onMount } from 'svelte';
   import { USERS } from '$lib/strings';
@@ -13,9 +13,66 @@
   let showDeleted = $state(true);
   const limit = 20;
 
+  // Bulk selection
+  let selected = $state<Set<string>>(new Set());
+  let bulkLoading = $state(false);
+  let bulkError = $state('');
+  let confirmDialog = $state<'soft' | 'hard' | null>(null);
+
   const visibleUsers = $derived(
     (data?.data ?? []).filter(u => showDeleted || !u.deleted_at)
   );
+
+  const allSelected = $derived(
+    visibleUsers.length > 0 && visibleUsers.every(u => selected.has(u.uid))
+  );
+
+  const someSelected = $derived(selected.size > 0);
+
+  function toggleAll() {
+    if (allSelected) {
+      selected = new Set();
+    } else {
+      selected = new Set(visibleUsers.map(u => u.uid));
+    }
+  }
+
+  function toggleOne(uid: string) {
+    const next = new Set(selected);
+    if (next.has(uid)) next.delete(uid);
+    else next.add(uid);
+    selected = next;
+  }
+
+  async function bulkSoftDelete() {
+    bulkLoading = true;
+    bulkError = '';
+    confirmDialog = null;
+    try {
+      await Promise.all([...selected].map(uid => deleteUser(uid)));
+      selected = new Set();
+      await load();
+    } catch (e: any) {
+      bulkError = e.message ?? 'Failed to delete users';
+    } finally {
+      bulkLoading = false;
+    }
+  }
+
+  async function bulkPurge() {
+    bulkLoading = true;
+    bulkError = '';
+    confirmDialog = null;
+    try {
+      await Promise.all([...selected].map(uid => purgeUser(uid)));
+      selected = new Set();
+      await load();
+    } catch (e: any) {
+      bulkError = e.message ?? 'Failed to purge users';
+    } finally {
+      bulkLoading = false;
+    }
+  }
 
   async function load() {
     loading = true;
@@ -117,6 +174,72 @@
     </form>
   </div>
 
+  <!-- Bulk action bar -->
+  {#if someSelected}
+    <div class="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
+      <span class="text-sm font-medium text-violet-700 dark:text-violet-300">
+        {selected.size} selected
+      </span>
+      <div class="flex-1" />
+      {#if bulkError}
+        <span class="text-sm text-red-500">{bulkError}</span>
+      {/if}
+      <button
+        onclick={() => confirmDialog = 'soft'}
+        disabled={bulkLoading}
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50 disabled:opacity-50 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+        Soft delete
+      </button>
+      <button
+        onclick={() => confirmDialog = 'hard'}
+        disabled={bulkLoading}
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Permanent delete
+      </button>
+      <button
+        onclick={() => { selected = new Set(); }}
+        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
+  {/if}
+
+  <!-- Confirm dialog -->
+  {#if confirmDialog}
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200 dark:border-gray-700">
+        {#if confirmDialog === 'soft'}
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-2">Soft delete {selected.size} user{selected.size > 1 ? 's' : ''}?</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Users will be marked as deleted but can be restored from the database.</p>
+          <div class="flex gap-3 justify-end">
+            <button onclick={() => confirmDialog = null} class="btn-outline">Cancel</button>
+            <button onclick={bulkSoftDelete} class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors">
+              {bulkLoading ? 'Deleting…' : 'Soft delete'}
+            </button>
+          </div>
+        {:else}
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-2">Permanently delete {selected.size} user{selected.size > 1 ? 's' : ''}?</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">This cannot be undone. All user data will be permanently removed.</p>
+          <div class="flex gap-3 justify-end">
+            <button onclick={() => confirmDialog = null} class="btn-outline">Cancel</button>
+            <button onclick={bulkPurge} class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors">
+              {bulkLoading ? 'Deleting…' : 'Delete permanently'}
+            </button>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
   <!-- Table -->
   <div class="card overflow-hidden">
     {#if loading}
@@ -132,6 +255,15 @@
       <table class="w-full">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-800">
+            <th class="px-4 py-3.5 w-10">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                indeterminate={someSelected && !allSelected}
+                onchange={toggleAll}
+                class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500 cursor-pointer"
+              />
+            </th>
             <th class="table-th">{USERS.colUser}</th>
             <th class="table-th">{USERS.colRole}</th>
             <th class="table-th">{USERS.colTier}</th>
@@ -143,7 +275,15 @@
         <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
           {#each visibleUsers as user}
             {@const isDeleted = !!user.deleted_at}
-            <tr class="table-row {isDeleted ? 'opacity-50' : ''}">
+            <tr class="table-row {isDeleted ? 'opacity-50' : ''} {selected.has(user.uid) ? 'bg-violet-50 dark:bg-violet-950/20' : ''}">
+              <td class="px-4 py-3.5 w-10">
+                <input
+                  type="checkbox"
+                  checked={selected.has(user.uid)}
+                  onchange={() => toggleOne(user.uid)}
+                  class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500 cursor-pointer"
+                />
+              </td>
               <td class="table-td">
                 <div class="flex items-center gap-3">
                   <div class="user-avatar {isDeleted ? 'grayscale' : ''}">
@@ -191,7 +331,7 @@
             </tr>
           {:else}
             <tr>
-              <td colspan="6" class="table-empty-cell">
+              <td colspan="7" class="table-empty-cell">
                 {USERS.noResults(search)}
               </td>
             </tr>
