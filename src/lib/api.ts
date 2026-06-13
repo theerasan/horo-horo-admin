@@ -6,7 +6,12 @@ import type {
   PaginatedUsers,
   User,
   PaginatedHistory,
-  AdminUpdateUserRequest
+  AdminUpdateUserRequest,
+  LegalDocument,
+  LegalDocSummary,
+  PaginatedLegalHistory,
+  CreateLegalDocRequest,
+  LegalDocType
 } from './types';
 
 function getToken(): string | null {
@@ -126,4 +131,63 @@ export async function listUserTokenHistory(
   return request<PaginatedHistory>(
     `/api/v1/admin/users/${uid}/token-history?page=${page}&limit=${limit}`
   );
+}
+
+// ── Legal documents ───────────────────────────────────────────────────────────
+
+export async function listLegalSummaries(): Promise<{ data: LegalDocSummary[] }> {
+  return request<{ data: LegalDocSummary[] }>('/api/v1/admin/legal');
+}
+
+export async function listLegalHistory(
+  type: LegalDocType,
+  language: string,
+  page = 1,
+  limit = 20
+): Promise<PaginatedLegalHistory> {
+  return request<PaginatedLegalHistory>(
+    `/api/v1/admin/legal/${type}/${language}?page=${page}&limit=${limit}`
+  );
+}
+
+export async function getLegalVersion(id: string): Promise<LegalDocument> {
+  return request<LegalDocument>(`/api/v1/admin/legal/versions/${id}`);
+}
+
+export async function createLegalDoc(
+  type: LegalDocType,
+  language: string,
+  data: CreateLegalDocRequest
+): Promise<LegalDocument> {
+  return request<LegalDocument>(`/api/v1/admin/legal/${type}/${language}`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function publishLegalDoc(id: string): Promise<LegalDocument> {
+  return request<LegalDocument>(`/api/v1/admin/legal/versions/${id}/publish`, {
+    method: 'POST'
+  });
+}
+
+export async function deleteLegalDoc(id: string): Promise<void> {
+  return request<void>(`/api/v1/admin/legal/versions/${id}`, { method: 'DELETE' });
+}
+
+export async function deleteAllLegalDocs(type: LegalDocType, language: string): Promise<void> {
+  return request<void>(`/api/v1/admin/legal/${type}/${language}`, { method: 'DELETE' });
+}
+
+// Public (no auth) — used to preview
+export async function getPublishedLegal(
+  type: LegalDocType,
+  language: string
+): Promise<LegalDocument> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/legal/${type}?lang=${language}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body.message ?? res.statusText, body.error);
+  }
+  return res.json();
 }

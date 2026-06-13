@@ -97,6 +97,48 @@ export interface VerifyOtpResponse {
   is_new_user: boolean;
 }
 
+// ── Legal documents ───────────────────────────────────────────────────────────
+
+export type LegalDocType = 'privacy_policy' | 'terms_of_use';
+
+export interface LegalDocument {
+  id: string;
+  type: LegalDocType;
+  language: string;
+  version: number;
+  title: string;
+  content: string;
+  is_published: boolean;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LegalDocSummary {
+  type: LegalDocType;
+  language: string;
+  latest_version: number;
+  published_version: number | null;
+  published_at: string | null;
+  updated_at: string;
+}
+
+export interface PaginatedLegalHistory {
+  data: LegalDocument[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface CreateLegalDocRequest {
+  title: string;
+  content: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface AdminUpdateUserRequest {
   display_name?: string;
   email?: string;

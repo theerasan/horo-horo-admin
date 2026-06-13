@@ -13,6 +13,7 @@ export const NAV = {
   dashboard: 'Dashboard',
   users: 'Users',
   tokenHistory: 'Token History',
+  legal: 'Legal Documents',
 } as const;
 
 // ─── Auth / Login ─────────────────────────────────
@@ -189,6 +190,66 @@ export const ADD_TOKENS_USER_DIALOG = {
   cancel: 'Cancel',
   submitButton: (n: number) => `Add ${n} tokens`,
   errorFallback: 'Failed to add tokens',
+} as const;
+
+// ─── Legal Documents ──────────────────────────────
+export const LEGAL = {
+  navLabel: 'Legal Documents',
+
+  // Overview page
+  title: 'Legal Documents',
+  subtitle: 'Manage privacy policy and terms of use in all languages',
+  newDocButton: 'New Document',
+  colType: 'Type',
+  colLanguage: 'Language',
+  colLatestVersion: 'Latest',
+  colPublishedVersion: 'Published',
+  colPublishedAt: 'Published At',
+  colUpdatedAt: 'Last Updated',
+  noDocs: 'No legal documents yet. Create the first one.',
+  typeLabelPrivacy: 'Privacy Policy',
+  typeLabelTerms: 'Terms of Use',
+
+  // History + editor page
+  historyTitle: (type: string, lang: string) => `${type} · ${lang.toUpperCase()}`,
+  backToOverview: '← Back to Legal Documents',
+  newVersionButton: 'New Version',
+  colVersion: 'Version',
+  colTitle: 'Title',
+  colStatus: 'Status',
+  colCreatedAt: 'Created',
+  statusPublished: 'Published',
+  statusDraft: 'Draft',
+  publishButton: 'Publish',
+  publishing: 'Publishing…',
+  viewButton: 'View',
+  noHistory: 'No versions yet.',
+  publishConfirm: (version: number) =>
+    `Publish version ${version}? This will replace the currently published version.`,
+
+  // New version form
+  formTitle: 'Create New Version',
+  fieldTitle: 'Title',
+  fieldTitlePlaceholder: 'e.g. Privacy Policy',
+  fieldLanguage: 'Language',
+  fieldLanguagePlaceholder: 'en',
+  fieldContent: 'Content (HTML)',
+  fieldContentPlaceholder: '<h1>Privacy Policy</h1>\n<p>...</p>',
+  submitButton: 'Save Draft',
+  submitting: 'Saving…',
+  cancelButton: 'Cancel',
+  saveSuccess: 'New draft saved.',
+  saveFallbackError: 'Failed to save draft.',
+  publishSuccess: 'Version published successfully.',
+  publishFallbackError: 'Failed to publish version.',
+
+  suggestedLanguages: [
+    { code: 'en', label: 'English' },
+    { code: 'th', label: 'Thai' },
+    { code: 'ja', label: 'Japanese' },
+    { code: 'zh', label: 'Chinese' },
+    { code: 'ko', label: 'Korean' },
+  ],
 } as const;
 
 // ─── Generic ──────────────────────────────────────
