@@ -14,6 +14,23 @@ export const NAV = {
   users: 'Users',
   tokenHistory: 'Token History',
   legal: 'Legal Documents',
+  pricing: 'Pricing',
+} as const;
+
+// ─── Pricing ──────────────────────────────────────
+export const PRICING = {
+  title: 'Feature Pricing',
+  subtitle: 'Set how many tokens each feature costs. Changes apply to new requests within seconds.',
+  colFeature: 'Feature',
+  colKey: 'Key',
+  colCost: 'Token cost',
+  colUpdated: 'Last updated',
+  save: 'Save',
+  saving: 'Saving…',
+  saved: 'Saved',
+  loadError: 'Failed to load pricing',
+  saveError: 'Failed to save',
+  invalidCost: 'Cost must be 0 or more',
 } as const;
 
 // ─── Auth / Login ─────────────────────────────────

@@ -11,7 +11,8 @@ import type {
   LegalDocSummary,
   PaginatedLegalHistory,
   CreateLegalDocRequest,
-  LegalDocType
+  LegalDocType,
+  FeaturePricing
 } from './types';
 
 function getToken(): string | null {
@@ -177,6 +178,22 @@ export async function deleteLegalDoc(id: string): Promise<void> {
 
 export async function deleteAllLegalDocs(type: LegalDocType, language: string): Promise<void> {
   return request<void>(`/api/v1/admin/legal/${type}/${language}`, { method: 'DELETE' });
+}
+
+// ── Feature pricing ─────────────────────────────────────────────────────────
+
+export async function listPricing(): Promise<{ pricing: FeaturePricing[] }> {
+  return request<{ pricing: FeaturePricing[] }>('/api/v1/admin/pricing');
+}
+
+export async function updatePricing(
+  feature: string,
+  tokenCost: number
+): Promise<FeaturePricing> {
+  return request<FeaturePricing>(`/api/v1/admin/pricing/${feature}`, {
+    method: 'PUT',
+    body: JSON.stringify({ token_cost: tokenCost })
+  });
 }
 
 // Public (no auth) — used to preview

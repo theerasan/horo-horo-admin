@@ -139,6 +139,15 @@ export interface CreateLegalDocRequest {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+export interface FeaturePricing {
+  feature: string;
+  token_cost: number;
+  label: string;
+  updated_at: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface AdminUpdateUserRequest {
   display_name?: string;
   email?: string;
