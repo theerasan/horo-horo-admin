@@ -349,65 +349,65 @@
       {#if user.profile}
         {@const p = user.profile}
         <div class="card-padded">
-          <h2 class="text-heading-sm mb-4">Onboarding Profile</h2>
+          <h2 class="text-heading-sm mb-4">{USER_DETAIL.profileTitle}</h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {#if p.birth_date}
               <div class="stat-card">
-                <p class="stat-label">Date of Birth</p>
+                <p class="stat-label">{USER_DETAIL.profileDateOfBirth}</p>
                 <p class="text-body-semibold">{new Date(p.birth_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
               </div>
             {/if}
             {#if p.time_of_birth}
               <div class="stat-card">
-                <p class="stat-label">Time of Birth</p>
+                <p class="stat-label">{USER_DETAIL.profileTimeOfBirth}</p>
                 <p class="text-body-semibold">{p.time_of_birth}</p>
               </div>
             {/if}
             {#if p.place_of_birth}
               <div class="stat-card">
-                <p class="stat-label">Place of Birth</p>
+                <p class="stat-label">{USER_DETAIL.profilePlaceOfBirth}</p>
                 <p class="text-body-semibold">{p.place_of_birth}</p>
               </div>
             {/if}
             {#if p.gender}
               <div class="stat-card">
-                <p class="stat-label">Gender</p>
+                <p class="stat-label">{USER_DETAIL.profileGender}</p>
                 <p class="text-body-semibold capitalize">{p.gender}</p>
               </div>
             {/if}
             {#if p.gender_preference}
               <div class="stat-card">
-                <p class="stat-label">Gender Preference</p>
+                <p class="stat-label">{USER_DETAIL.profileGenderPreference}</p>
                 <p class="text-body-semibold capitalize">{p.gender_preference}</p>
               </div>
             {/if}
             {#if p.element}
               <div class="stat-card">
-                <p class="stat-label">Element</p>
+                <p class="stat-label">{USER_DETAIL.profileElement}</p>
                 <p class="text-body-semibold capitalize">{p.element}</p>
               </div>
             {/if}
             {#if p.planet}
               <div class="stat-card">
-                <p class="stat-label">Ruling Planet</p>
+                <p class="stat-label">{USER_DETAIL.profilePlanet}</p>
                 <p class="text-body-semibold capitalize">{p.planet}</p>
               </div>
             {/if}
             {#if p.mbti}
               <div class="stat-card">
-                <p class="stat-label">MBTI</p>
+                <p class="stat-label">{USER_DETAIL.profileMbti}</p>
                 <p class="text-body-semibold">{p.mbti}</p>
               </div>
             {/if}
             {#if p.enneagram != null}
               <div class="stat-card">
-                <p class="stat-label">Enneagram</p>
+                <p class="stat-label">{USER_DETAIL.profileEnneagram}</p>
                 <p class="text-body-semibold">{p.enneagram}{p.enneagram_wing != null ? `w${p.enneagram_wing}` : ''}</p>
               </div>
             {/if}
             <div class="stat-card">
-              <p class="stat-label">Onboarding</p>
-              <p class="text-body-semibold">{p.onboarding_complete ? 'Complete' : `Step ${p.onboarding_step}`}</p>
+              <p class="stat-label">{USER_DETAIL.profileOnboarding}</p>
+              <p class="text-body-semibold">{p.onboarding_complete ? USER_DETAIL.profileOnboardingComplete : USER_DETAIL.profileOnboardingStep(p.onboarding_step)}</p>
             </div>
           </div>
         </div>

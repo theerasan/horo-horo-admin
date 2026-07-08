@@ -185,6 +185,20 @@ export const USER_DETAIL = {
   nextPage: 'Next →',
   loadFallbackError: 'Failed to load user',
   deleteFallbackError: 'Failed to delete user',
+  // Onboarding profile section
+  profileTitle: 'Onboarding Profile',
+  profileDateOfBirth: 'Date of Birth',
+  profileTimeOfBirth: 'Time of Birth',
+  profilePlaceOfBirth: 'Place of Birth',
+  profileGender: 'Gender',
+  profileGenderPreference: 'Gender Preference',
+  profileElement: 'Element',
+  profilePlanet: 'Ruling Planet',
+  profileMbti: 'MBTI',
+  profileEnneagram: 'Enneagram',
+  profileOnboarding: 'Onboarding',
+  profileOnboardingComplete: 'Complete',
+  profileOnboardingStep: (n: number) => `Step ${n}`,
 } as const;
 
 // ─── Delete dialog ────────────────────────────────
