@@ -15,6 +15,7 @@ export const NAV = {
   tokenHistory: 'Token History',
   legal: 'Legal Documents',
   pricing: 'Pricing',
+  packages: 'Packages',
 } as const;
 
 // ─── Pricing ──────────────────────────────────────
@@ -281,6 +282,43 @@ export const LEGAL = {
     { code: 'zh', label: 'Chinese' },
     { code: 'ko', label: 'Korean' },
   ],
+} as const;
+
+// ─── Packages ──────────────────────────────────────
+export const PACKAGES = {
+  title: 'Packages',
+  subtitle: 'Configure the three package types clients can buy — rewarded videos, subscriptions, and token top-ups.',
+  loadError: 'Failed to load packages',
+  saveError: 'Failed to save',
+  save: 'Save',
+  saving: 'Saving…',
+  saved: 'Saved',
+
+  videoRewardTitle: 'Video Reward',
+  videoRewardSubtitle: 'Tokens granted for watching one rewarded video to completion.',
+  videoRewardLabel: 'Tokens per video',
+  videoRewardInvalid: 'Tokens must be 0 or more',
+
+  subscribeTitle: 'Subscribe',
+  subscribeSubtitle: 'Basic, Pro, and Premium tiers — set the base monthly price and daily token grant for each.',
+  colTier: 'Tier',
+  colPrice: 'Price / mo',
+  colTokensPerDay: 'Tokens / day',
+  priceInvalid: 'Price must be 0 or more',
+  tokensPerDayInvalid: 'Tokens per day must be 0 or more',
+
+  billingTitle: 'Billing Options',
+  billingSubtitle: 'Discount applied to the base monthly price for each payment cadence.',
+  colCycle: 'Cycle',
+  colDiscount: 'Discount %',
+  discountInvalid: 'Discount must be between 0 and 100',
+
+  tokenPackagesTitle: 'Token Packages',
+  tokenPackagesSubtitle: 'One-time top-up packs — set the token amount and price for each.',
+  colTokens: 'Tokens',
+  tokensInvalid: 'Tokens must be greater than 0',
+
+  colUpdated: 'Last updated',
 } as const;
 
 // ─── Generic ──────────────────────────────────────

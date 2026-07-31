@@ -12,7 +12,12 @@ import type {
   PaginatedLegalHistory,
   CreateLegalDocRequest,
   LegalDocType,
-  FeaturePricing
+  FeaturePricing,
+  PackageConfig,
+  VideoRewardConfig,
+  SubscriptionPlan,
+  SubscriptionBillingOption,
+  TokenPackage
 } from './types';
 
 function getToken(): string | null {
@@ -193,6 +198,51 @@ export async function updatePricing(
   return request<FeaturePricing>(`/api/v1/admin/pricing/${feature}`, {
     method: 'PUT',
     body: JSON.stringify({ token_cost: tokenCost })
+  });
+}
+
+// ── Packages ─────────────────────────────────────────────────────────────────
+
+export async function getPackageConfig(): Promise<PackageConfig> {
+  return request<PackageConfig>('/api/v1/admin/packages');
+}
+
+export async function updateVideoReward(tokensPerVideo: number): Promise<VideoRewardConfig> {
+  return request<VideoRewardConfig>('/api/v1/admin/packages/video-reward', {
+    method: 'PUT',
+    body: JSON.stringify({ tokens_per_video: tokensPerVideo })
+  });
+}
+
+export async function updateSubscriptionPlan(
+  tier: string,
+  price: number,
+  tokensPerDay: number
+): Promise<SubscriptionPlan> {
+  return request<SubscriptionPlan>(`/api/v1/admin/packages/subscription-plans/${tier}`, {
+    method: 'PUT',
+    body: JSON.stringify({ price, tokens_per_day: tokensPerDay })
+  });
+}
+
+export async function updateBillingOption(
+  cycle: string,
+  discountPercent: number
+): Promise<SubscriptionBillingOption> {
+  return request<SubscriptionBillingOption>(`/api/v1/admin/packages/billing-options/${cycle}`, {
+    method: 'PUT',
+    body: JSON.stringify({ discount_percent: discountPercent })
+  });
+}
+
+export async function updateTokenPackage(
+  key: string,
+  tokens: number,
+  price: number
+): Promise<TokenPackage> {
+  return request<TokenPackage>(`/api/v1/admin/packages/token-packages/${key}`, {
+    method: 'PUT',
+    body: JSON.stringify({ tokens, price })
   });
 }
 

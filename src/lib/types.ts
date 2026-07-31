@@ -146,6 +146,49 @@ export interface FeaturePricing {
   updated_at: string;
 }
 
+// ── Packages ─────────────────────────────────────────────────────────────────
+
+export interface VideoRewardConfig {
+  tokens_per_video: number;
+  updated_at: string;
+}
+
+export type SubscriptionTier = 'basic' | 'pro' | 'premium';
+
+export interface SubscriptionPlan {
+  tier: SubscriptionTier;
+  label: string;
+  price: number;
+  tokens_per_day: number;
+  sort_order: number;
+  updated_at: string;
+}
+
+export type BillingCycle = 'monthly' | 'quarterly' | 'annually';
+
+export interface SubscriptionBillingOption {
+  cycle: BillingCycle;
+  label: string;
+  discount_percent: number;
+  sort_order: number;
+  updated_at: string;
+}
+
+export interface TokenPackage {
+  key: string;
+  tokens: number;
+  price: number;
+  sort_order: number;
+  updated_at: string;
+}
+
+export interface PackageConfig {
+  video_reward: VideoRewardConfig;
+  subscription_plans: SubscriptionPlan[];
+  subscription_billing: SubscriptionBillingOption[];
+  token_packages: TokenPackage[];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AdminUpdateUserRequest {
