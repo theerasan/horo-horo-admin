@@ -408,7 +408,7 @@
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-800 text-left">
               <th class="px-5 py-3 text-overline">{PACKAGES.colTokens}</th>
-              <th class="px-5 py-3 text-overline">{PACKAGES.colPrice}</th>
+              <th class="px-5 py-3 text-overline">{PACKAGES.colPackPrice}</th>
               <th class="px-5 py-3 text-overline">{PACKAGES.colUpdated}</th>
               <th class="px-5 py-3"></th>
             </tr>

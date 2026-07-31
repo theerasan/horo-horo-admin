@@ -316,6 +316,7 @@ export const PACKAGES = {
   tokenPackagesTitle: 'Token Packages',
   tokenPackagesSubtitle: 'One-time top-up packs — set the token amount and price for each.',
   colTokens: 'Tokens',
+  colPackPrice: 'Price',
   tokensInvalid: 'Tokens must be greater than 0',
 
   colUpdated: 'Last updated',
