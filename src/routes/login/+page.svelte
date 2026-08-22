@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { auth } from '$lib/auth.svelte';
   import { login, sendOtp, verifyOtp, getAdminSelf, ApiError } from '$lib/api';
@@ -21,9 +22,27 @@
   let otpRef = $state('');
   let otpMessage = $state('');
 
+  /**
+   * Where to land after signing in. Set by the API client when an expired
+   * session bounced someone off a page, so they return to it instead of the
+   * dashboard.
+   *
+   * Validated, not trusted: it arrives in the URL, so anyone can put anything
+   * there. Only a same-origin absolute path is accepted — `//evil.com` is a
+   * protocol-relative URL that a naive `startsWith('/')` check would wave
+   * through straight off the site.
+   */
+  function safeRedirect(): string {
+    const raw = $page.url.searchParams.get('redirectTo');
+    if (!raw) return '/dashboard';
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard';
+    if (raw.startsWith('/login')) return '/dashboard';
+    return raw;
+  }
+
   onMount(() => {
     auth.init();
-    if (auth.user) goto('/dashboard');
+    if (auth.user) goto(safeRedirect());
   });
 
   function switchTab(tab: 'password' | 'otp') {
@@ -53,7 +72,7 @@
       tier: userDetail.tier,
       token: userDetail.token
     }, token, '');
-    goto('/dashboard');
+    goto(safeRedirect());
   }
 
   // ── Password login ────────────────────────────────────────────

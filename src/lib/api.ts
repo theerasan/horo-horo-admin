@@ -1,3 +1,5 @@
+import { goto } from '$app/navigation';
+import { auth } from './auth.svelte';
 import { API_BASE_URL } from './env';
 import type {
   LoginResponse,
@@ -21,13 +23,50 @@ import type {
   PaymentSummary,
   PaymentRange,
   PaginatedPayments,
-  PaymentStatus,
-  PaymentEnvironment
+  PaymentStatus
 } from './types';
 
 function getToken(): string | null {
   if (typeof localStorage === 'undefined') return null;
   return localStorage.getItem('auth_token');
+}
+
+/**
+ * Endpoints whose 401 means "those credentials are wrong", not "your session
+ * expired". The login screen shows its own message for these, so they must not
+ * be swept into the session-expiry redirect below.
+ */
+const CREDENTIAL_PATHS = [
+  '/api/v1/auth/login',
+  '/api/v1/auth/send-otp',
+  '/api/v1/auth/verify-otp'
+];
+
+/**
+ * Sends the user back to the login screen when their token has expired.
+ *
+ * The admin only checked `auth.user` on mount, so a token that expired while
+ * someone had a page open left them clicking through error toasts with no
+ * indication that signing in again was the fix. Every request now funnels
+ * through here, which means whichever call notices first does the redirect.
+ *
+ * `auth.clear()` comes first: the stored user is what the layout guard reads,
+ * so leaving it behind would let the app bounce straight back into a session
+ * that no longer works.
+ */
+function handleSessionExpiry(path: string) {
+  if (typeof window === 'undefined') return;
+  if (CREDENTIAL_PATHS.some((p) => path.startsWith(p))) return;
+  // Already on the login screen — including the sign-in flow's own profile
+  // fetch, which shows "access denied" itself. Redirecting would clobber it.
+  if (window.location.pathname.startsWith('/login')) return;
+
+  auth.clear();
+
+  // Carry where they were so signing in returns them there rather than
+  // dumping everyone on the dashboard.
+  const from = window.location.pathname + window.location.search;
+  goto(`/login?redirectTo=${encodeURIComponent(from)}`, { replaceState: true });
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -40,6 +79,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   if (!res.ok) {
+    if (res.status === 401) handleSessionExpiry(path);
     const body = await res.json().catch(() => ({}));
     throw new ApiError(res.status, body.message ?? res.statusText, body.error);
   }
@@ -279,25 +319,24 @@ export async function updateTokenPackage(
  * The payments dashboard's entire payload for one range — totals, the time
  * series, both breakdowns, and the recent activity list. One request per range
  * change rather than four.
+ *
+ * There is no environment parameter: the API scopes every payments read to its
+ * own deployment's environment, derived from the Xendit key it was given. This
+ * site shows this site's money. The response still reports which environment
+ * that was, so the screen can label it.
  */
-export async function getPaymentSummary(
-  range: PaymentRange,
-  environment?: PaymentEnvironment
-): Promise<PaymentSummary> {
+export async function getPaymentSummary(range: PaymentRange): Promise<PaymentSummary> {
   const params = new URLSearchParams({ range });
-  if (environment) params.set('environment', environment);
   return request<PaymentSummary>(`/api/v1/admin/payments/summary?${params}`);
 }
 
 export async function listPaymentTransactions(
   page = 1,
   limit = 20,
-  status?: PaymentStatus,
-  environment?: PaymentEnvironment
+  status?: PaymentStatus
 ): Promise<PaginatedPayments> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status) params.set('status', status);
-  if (environment) params.set('environment', environment);
   return request<PaginatedPayments>(`/api/v1/admin/payments/transactions?${params}`);
 }
 

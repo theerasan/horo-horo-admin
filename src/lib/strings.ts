@@ -32,11 +32,11 @@ export const PAYMENTS = {
   ],
   rangeLabel: 'Period',
 
-  // Environment filter
-  envAll: 'All environments',
+  // Environment badge. Not a filter — the API scopes every read to its own
+  // deployment, so this only tells you which set of books you are looking at.
   envStaging: 'Staging',
   envProduction: 'Production',
-  envLabel: 'Environment',
+  envHint: 'Showing this deployment\u2019s payments only',
 
   // Stat cards
   revenue: 'Revenue',
