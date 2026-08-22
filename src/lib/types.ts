@@ -296,7 +296,6 @@ export interface PaymentSummary {
   /** 'day' or 'month' — what one point on the series covers. */
   bucket: string;
   currency: string;
-  environment: string;
   totals: PaymentTotals;
   /** The equally-long window immediately before, for "vs previous" deltas. */
   previous_totals: PaymentTotals;

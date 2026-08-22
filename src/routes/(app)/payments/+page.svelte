@@ -111,34 +111,18 @@
       <p class="page-subtitle">{PAYMENTS.subtitle}</p>
     </div>
 
-    <!-- Filters in one row above the charts. -->
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="segmented" role="group" aria-label={PAYMENTS.rangeLabel}>
-        {#each PAYMENTS.ranges as option}
-          <button
-            type="button"
-            class="segment"
-            class:active={range === option.key}
-            aria-pressed={range === option.key}
-            onclick={() => selectRange(option.key as PaymentRange)}
-          >
-            {option.label}
-          </button>
-        {/each}
-      </div>
-
-      <!-- A label, not a control. The API scopes every payments read to its
-           own deployment's environment, so there is nothing here to choose —
-           this just says which set of books is on screen. -->
-      {#if summary}
-        <span
-          class="env-badge"
-          class:env-production={summary.environment === 'production'}
-          title={PAYMENTS.envHint}
+    <div class="segmented" role="group" aria-label={PAYMENTS.rangeLabel}>
+      {#each PAYMENTS.ranges as option}
+        <button
+          type="button"
+          class="segment"
+          class:active={range === option.key}
+          aria-pressed={range === option.key}
+          onclick={() => selectRange(option.key as PaymentRange)}
         >
-          {summary.environment === 'production' ? PAYMENTS.envProduction : PAYMENTS.envStaging}
-        </span>
-      {/if}
+          {option.label}
+        </button>
+      {/each}
     </div>
   </div>
 
@@ -369,36 +353,6 @@
   :global(.dark) .segment.active {
     background: #111827;
     color: #9085e9;
-  }
-
-  /* Staging is the quiet default; production gets a warmer badge so it is
-     obvious at a glance which site you are looking at. */
-  .env-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.35rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    background: #f3f4f6;
-    color: #6b7280;
-    border: 1px solid #e5e7eb;
-  }
-  :global(.dark) .env-badge {
-    background: #1f2937;
-    color: #9ca3af;
-    border-color: #374151;
-  }
-  .env-badge.env-production {
-    background: #fef3c7;
-    color: #92400e;
-    border-color: #fde68a;
-  }
-  :global(.dark) .env-badge.env-production {
-    background: #3b2f0b;
-    color: #fbbf24;
-    border-color: #574618;
   }
 
   /* A small colored dot identifies the card without coloring its text. */
