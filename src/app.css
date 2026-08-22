@@ -481,3 +481,67 @@ label[for] {
 .text-danger {
   @apply text-red-500 dark:text-red-400;
 }
+
+/* ─── Segmented control ──────────────────────────── */
+/* The period picker on the payments and coupon dashboards. */
+.segmented {
+  @apply inline-flex gap-0.5 p-[3px] rounded-xl bg-gray-100 dark:bg-gray-800;
+}
+
+.segment {
+  @apply px-3.5 py-1.5 rounded-[0.55rem] text-[0.8125rem] font-semibold
+    text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50
+    transition-colors;
+}
+
+.segment.active {
+  @apply bg-white dark:bg-gray-900 text-violet-800 dark:text-violet-400 shadow-sm;
+}
+
+/* ─── Stat card dots ─────────────────────────────── */
+/* A small colored dot identifies a stat card without coloring its text. */
+.dot {
+  @apply w-2.5 h-2.5 rounded-full;
+}
+.dot-violet {
+  @apply bg-violet-800 dark:bg-violet-400;
+}
+.dot-emerald {
+  @apply bg-emerald-600 dark:bg-emerald-500;
+}
+.dot-blue {
+  @apply bg-blue-600 dark:bg-blue-500;
+}
+.dot-amber {
+  @apply bg-amber-500 dark:bg-amber-600;
+}
+
+/* ─── Badge tones ────────────────────────────────── */
+/* Lifecycle states on the coupon and redemption tables. */
+.badge-emerald {
+  @apply bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300;
+}
+.badge-amber {
+  @apply bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300;
+}
+.badge-blue {
+  @apply bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300;
+}
+.badge-off {
+  @apply bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400;
+}
+
+/* ─── Toggle chips ───────────────────────────────── */
+/* Multi-select without a multi-select: the coupon form's scope pickers, where
+   the option list is short and every option needs its price visible. */
+.chip {
+  @apply px-3 py-1.5 rounded-lg text-xs font-medium
+    border border-gray-200 dark:border-gray-700
+    bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300
+    hover:border-violet-300 dark:hover:border-violet-700 transition-colors;
+}
+
+.chip-on {
+  @apply bg-violet-50 dark:bg-violet-950/50 border-violet-400 dark:border-violet-600
+    text-violet-800 dark:text-violet-300;
+}

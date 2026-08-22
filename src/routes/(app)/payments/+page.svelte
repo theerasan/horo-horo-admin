@@ -80,6 +80,21 @@
     ];
   });
 
+  /**
+   * The chart takes one plotted measure per point, so each card picks its own
+   * field here rather than the component knowing this response's shape.
+   */
+  const revenuePoints = $derived(
+    (summary?.series ?? []).map((p) => ({ bucket: p.bucket, value: p.revenue, meta: p.transactions }))
+  );
+  const volumePoints = $derived(
+    (summary?.series ?? []).map((p) => ({ bucket: p.bucket, value: p.transactions, meta: p.revenue }))
+  );
+
+  const transactionsMeta = (n: number) =>
+    `${formatCount(n)} ${n === 1 ? PAYMENTS.transactionOne : PAYMENTS.transactionMany}`;
+  const revenueMeta = (v: number) => formatMoney(v, currency);
+
   const statusClass: Record<PaymentTransaction['status'], string> = {
     paid: 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300',
     pending: 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300',
@@ -197,11 +212,13 @@
         </div>
       </div>
       <TimeSeriesChart
-        points={summary.series}
-        metric="revenue"
+        points={revenuePoints}
+        metric="money"
         variant="area"
         {bucket}
         {currency}
+        seriesLabel={PAYMENTS.revenue}
+        metaLabel={transactionsMeta}
         emptyLabel={PAYMENTS.emptyChart}
       />
     </div>
@@ -218,11 +235,13 @@
         </div>
       </div>
       <TimeSeriesChart
-        points={summary.series}
-        metric="transactions"
+        points={volumePoints}
+        metric="count"
         variant="columns"
         {bucket}
         {currency}
+        seriesLabel={PAYMENTS.transactions}
+        metaLabel={revenueMeta}
         emptyLabel={PAYMENTS.emptyChart}
       />
     </div>
@@ -314,75 +333,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .segmented {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 0.75rem;
-    background: #f3f4f6;
-    gap: 2px;
-  }
-  :global(.dark) .segmented {
-    background: #1f2937;
-  }
-
-  .segment {
-    padding: 0.4rem 0.85rem;
-    border-radius: 0.55rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #6b7280;
-    transition: background 150ms ease, color 150ms ease;
-  }
-  .segment:hover {
-    color: #111827;
-  }
-  :global(.dark) .segment {
-    color: #9ca3af;
-  }
-  :global(.dark) .segment:hover {
-    color: #f9fafb;
-  }
-
-  .segment.active {
-    background: #ffffff;
-    color: #4a3aa7;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
-  }
-  :global(.dark) .segment.active {
-    background: #111827;
-    color: #9085e9;
-  }
-
-  /* A small colored dot identifies the card without coloring its text. */
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-  }
-  .dot-violet {
-    background: #4a3aa7;
-  }
-  .dot-emerald {
-    background: #1baf7a;
-  }
-  .dot-blue {
-    background: #2a78d6;
-  }
-  .dot-amber {
-    background: #eda100;
-  }
-  :global(.dark) .dot-violet {
-    background: #9085e9;
-  }
-  :global(.dark) .dot-emerald {
-    background: #199e70;
-  }
-  :global(.dark) .dot-blue {
-    background: #3987e5;
-  }
-  :global(.dark) .dot-amber {
-    background: #c98500;
-  }
-</style>

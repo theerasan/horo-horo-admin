@@ -304,3 +304,178 @@ export interface PaymentSummary {
   by_channel: PaymentBreakdownItem[];
   recent: PaymentTransaction[];
 }
+
+// ─── Coupons ─────────────────────────────────────────────────────────────────
+
+export type CouponDiscountType = 'percent' | 'fixed';
+export type CouponAppliesTo = 'token_package' | 'subscription' | 'both';
+
+/**
+ * Who may use a coupon and whether it is discoverable.
+ *
+ * 'code' is the default and the one to reach for: it never appears in the app's
+ * browse list, so a campaign code only works for the people it was sent to.
+ * 'public' is for coupons meant to be found. 'granted' is redeemable only by a
+ * user who holds a grant — the shape the planned lucky wheel issues.
+ */
+export type CouponAudience = 'public' | 'code' | 'granted';
+
+export type CouponRedemptionStatus = 'reserved' | 'consumed' | 'released';
+
+export interface Coupon {
+  id: string;
+  code: string;
+  title: string;
+  description?: string;
+
+  discount_type: CouponDiscountType;
+  discount_percent: number;
+  discount_amount: number;
+  /** Caps a percentage discount. null = uncapped. */
+  max_discount?: number | null;
+  /** Measured against the price before the discount. */
+  min_purchase: number;
+
+  applies_to: CouponAppliesTo;
+  /** Empty means "every one of them", not "none". */
+  package_keys: string[];
+  subscription_tiers: string[];
+  billing_cycles: string[];
+
+  currency: string;
+
+  starts_at?: string | null;
+  expires_at?: string | null;
+
+  /** Total across all users. null = unlimited. */
+  max_redemptions?: number | null;
+  /** Reservations held plus redemptions consumed — what the quota counts. */
+  redeemed_count: number;
+  per_user_limit: number;
+
+  audience: CouponAudience;
+  first_purchase_only: boolean;
+  active: boolean;
+
+  /** The paid subset of redeemed_count. Admin listings only. */
+  consumed_count: number;
+
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedCoupons {
+  data: Coupon[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface CouponRedemption {
+  id: string;
+  coupon_id: string;
+  coupon_code?: string;
+  user_uid?: string;
+  user_email?: string;
+  payment_transaction_id: string;
+  reference_id: string;
+  grant_id?: string | null;
+  status: CouponRedemptionStatus;
+  discount_amount: number;
+  original_amount: number;
+  final_amount: number;
+  currency: string;
+  created_at: string;
+  consumed_at?: string | null;
+  released_at?: string | null;
+}
+
+export interface CouponGrant {
+  id: string;
+  coupon_id: string;
+  user_uid?: string;
+  source: 'manual' | 'lucky_wheel' | 'campaign';
+  expires_at?: string | null;
+  consumed_at?: string | null;
+  created_at: string;
+}
+
+export interface CouponSettings {
+  /** The floor a discounted invoice may not fall below. */
+  min_chargeable_amount: number;
+  updated_at: string;
+}
+
+/** The payload the create/edit form sends. Mirrors the backend's couponRequest. */
+export interface CouponInput {
+  code: string;
+  title: string;
+  description: string;
+  discount_type: CouponDiscountType;
+  discount_percent: number;
+  discount_amount: number;
+  max_discount: number | null;
+  min_purchase: number;
+  applies_to: CouponAppliesTo;
+  package_keys: string[];
+  subscription_tiers: string[];
+  billing_cycles: string[];
+  currency: string;
+  starts_at: string | null;
+  expires_at: string | null;
+  max_redemptions: number | null;
+  per_user_limit: number;
+  audience: CouponAudience;
+  first_purchase_only: boolean;
+  active: boolean;
+}
+
+// ─── Coupon dashboard ────────────────────────────────────────────────────────
+
+export interface CouponSeriesPoint {
+  bucket: string;
+  redemptions: number;
+  /** What the coupons gave away in this bucket. */
+  discount: number;
+  /** What was still collected on those discounted orders. */
+  revenue: number;
+}
+
+export interface CouponUsageItem {
+  coupon_id: string;
+  code: string;
+  title: string;
+  /** Still holding quota on an unpaid invoice. */
+  reserved: number;
+  redemptions: number;
+  discount: number;
+  revenue: number;
+  /** Consumed ÷ settled attempts, 0–100. Reserved rows are excluded. */
+  conversion_rate: number;
+}
+
+export interface CouponTotals {
+  redemptions: number;
+  discount: number;
+  revenue: number;
+  unique_users: number;
+  reserved: number;
+  released: number;
+  conversion_rate: number;
+  average_discount: number;
+  /** Percentage of all paid orders in the window that carried a coupon. */
+  coupon_share: number;
+}
+
+export interface CouponSummary {
+  range: PaymentRange;
+  bucket: string;
+  currency: string;
+  totals: CouponTotals;
+  previous_totals: CouponTotals;
+  series: CouponSeriesPoint[];
+  top_coupons: CouponUsageItem[];
+  recent: CouponRedemption[];
+}

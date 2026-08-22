@@ -13,21 +13,46 @@
    * Width is measured from the DOM rather than baked into a viewBox, because a
    * viewBox that stretches would distort the labels along with the marks.
    */
-  import type { PaymentSeriesPoint } from '$lib/types';
-  import { formatMoney, formatBucket as formatBucketDate } from '$lib/format';
+  import { formatMoney, formatCount, formatBucket as formatBucketDate } from '$lib/format';
+
+  /**
+   * One bucket. The series is passed already reduced to a single plotted
+   * measure — deciding *which* field to plot is the caller's job, so this
+   * component works for revenue, discount given, or any other one-per-bucket
+   * number without learning each dashboard's response shape.
+   */
+  export interface ChartPoint {
+    bucket: string;
+    /** The plotted measure. */
+    value: number;
+    /** A secondary figure for the tooltip's meta line. */
+    meta?: number;
+  }
 
   interface Props {
-    points: PaymentSeriesPoint[];
-    /** Which measure to plot. Picks the value, the axis format, and the mark. */
-    metric: 'revenue' | 'transactions';
+    points: ChartPoint[];
+    /** How values are formatted: currency, or a plain integer count. */
+    metric: 'money' | 'count';
     variant: 'area' | 'columns';
     /** 'day' or 'month' — decides how bucket dates are labelled. */
     bucket: string;
     currency: string;
     emptyLabel: string;
+    /** Names the measure for screen readers. The card title names it visually. */
+    seriesLabel: string;
+    /** Renders the tooltip's second line from `meta`. Omit for no meta line. */
+    metaLabel?: (meta: number) => string;
   }
 
-  let { points, metric, variant, bucket, currency, emptyLabel }: Props = $props();
+  let { points, metric, variant, bucket, currency, emptyLabel, seriesLabel, metaLabel }: Props =
+    $props();
+
+  /**
+   * Gradient ids must be unique per instance: two area charts on one page with
+   * the same id make the second one reference the first's fill, and whichever
+   * unmounts first takes the gradient with it.
+   */
+  const gradientId = `areaFill-${Math.random().toString(36).slice(2, 9)}`;
 
   // ── Geometry ───────────────────────────────────────────────────────────────
   // Left gutter holds y-axis labels, bottom holds the date ticks; the top pad
@@ -40,7 +65,7 @@
   let width = $state(720);
   let hoverIndex = $state<number | null>(null);
 
-  const values = $derived(points.map((p) => (metric === 'revenue' ? p.revenue : p.transactions)));
+  const values = $derived(points.map((p) => p.value));
   const hasData = $derived(values.some((v) => v > 0));
 
   const plotWidth = $derived(Math.max(width - PAD.left - PAD.right, 10));
@@ -59,7 +84,7 @@
       // reads as "measured, nothing happened". The ticks have to span that
       // axis — a 0–100 scale labelled 0/1/2/3/4 stacks every label on the
       // baseline.
-      const max = metric === 'revenue' ? 100 : 4;
+      const max = metric === 'money' ? 100 : 4;
       return { max, ticks: [0, 0.25, 0.5, 0.75, 1].map((f) => f * max) };
     }
 
@@ -103,10 +128,15 @@
   // ── Formatting ─────────────────────────────────────────────────────────────
 
   function formatAxis(v: number): string {
-    if (metric === 'transactions') return String(Math.round(v));
+    if (metric === 'count') return String(Math.round(v));
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`;
     if (v >= 1_000) return `${(v / 1_000).toFixed(v % 1_000 === 0 ? 0 : 1)}k`;
     return String(Math.round(v));
+  }
+
+  /** A plotted value as the reader should see it — the peak label and tooltip. */
+  function formatValue(v: number): string {
+    return metric === 'money' ? formatMoney(v, currency) : formatCount(v);
   }
 
   const formatBucket = (iso: string, long = false) => formatBucketDate(iso, bucket, long);
@@ -161,7 +191,7 @@
       point: p,
       anchor,
       left,
-      top: Math.max(yAt(metric === 'revenue' ? p.revenue : p.transactions) - 12, 8)
+      top: Math.max(yAt(p.value) - 12, 8)
     };
   });
 </script>
@@ -171,7 +201,7 @@
        tooltip and the empty-state text, which are not part of the picture. -->
   <svg
     role="img"
-    aria-label="{metric === 'revenue' ? 'Revenue' : 'Paid transactions'} per {bucket}"
+    aria-label="{seriesLabel} per {bucket}"
     width="100%"
     height={HEIGHT}
     viewBox="0 0 {width} {HEIGHT}"
@@ -179,7 +209,7 @@
     onpointerleave={() => (hoverIndex = null)}
   >
     <defs>
-      <linearGradient id="areaFill-{metric}" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="var(--series)" stop-opacity="0.18" />
         <stop offset="100%" stop-color="var(--series)" stop-opacity="0.02" />
       </linearGradient>
@@ -201,7 +231,7 @@
     {/each}
 
     {#if variant === 'area'}
-      <path d={areaPath} fill="url(#areaFill-{metric})" />
+      <path d={areaPath} fill="url(#{gradientId})" />
       <path
         d={linePath}
         fill="none"
@@ -298,7 +328,7 @@
         class="peak-label"
         text-anchor="middle"
       >
-        {metric === 'revenue' ? formatMoney(values[peakIndex], currency) : values[peakIndex]}
+        {formatValue(values[peakIndex])}
       </text>
     {/if}
   </svg>
@@ -306,16 +336,10 @@
   {#if tooltip}
     <div class="tooltip" style="left: {tooltip.left}px; top: {tooltip.top}px;">
       <p class="tooltip-date">{formatBucket(tooltip.point.bucket, true)}</p>
-      <p class="tooltip-value">
-        {metric === 'revenue'
-          ? formatMoney(tooltip.point.revenue, currency)
-          : `${tooltip.point.transactions} paid`}
-      </p>
-      <p class="tooltip-meta">
-        {metric === 'revenue'
-          ? `${tooltip.point.transactions} transaction${tooltip.point.transactions === 1 ? '' : 's'}`
-          : formatMoney(tooltip.point.revenue, currency)}
-      </p>
+      <p class="tooltip-value">{formatValue(tooltip.point.value)}</p>
+      {#if metaLabel && tooltip.point.meta !== undefined}
+        <p class="tooltip-meta">{metaLabel(tooltip.point.meta)}</p>
+      {/if}
     </div>
   {/if}
 

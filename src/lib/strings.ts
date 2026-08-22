@@ -17,6 +17,7 @@ export const NAV = {
   pricing: 'Pricing',
   packages: 'Packages',
   payments: 'Payments',
+  coupons: 'Coupons',
 } as const;
 
 // ─── Payments dashboard ───────────────────────────
@@ -77,6 +78,8 @@ export const PAYMENTS = {
   emptyChart: 'No settled payments in this period',
   tokensUnit: 'tokens',
   subscriptionLabel: 'Subscription',
+  transactionOne: 'transaction',
+  transactionMany: 'transactions',
 } as const;
 
 // ─── Pricing ──────────────────────────────────────
@@ -399,4 +402,173 @@ export const GENERIC = {
   cancel: 'Cancel',
   empty: '—',
   noName: 'No name',
+} as const;
+
+// ─── Coupons ──────────────────────────────────────
+export const COUPONS = {
+  title: 'Coupons',
+  subtitle: 'Discount codes for token packs and subscriptions.',
+
+  // Tabs
+  tabManage: 'Coupons',
+  tabUsage: 'Usage',
+
+  // List toolbar
+  searchPlaceholder: 'Search code or title…',
+  newCoupon: 'New coupon',
+  filterAll: 'All',
+  filterActive: 'Active',
+  filterScheduled: 'Scheduled',
+  filterExpired: 'Expired',
+  filterExhausted: 'Fully used',
+  filterInactive: 'Switched off',
+
+  // Table
+  colCode: 'Code',
+  colDiscount: 'Discount',
+  colAppliesTo: 'Applies to',
+  colUses: 'Uses',
+  colWindow: 'Valid',
+  colStatus: 'Status',
+  colActions: '',
+
+  // Status badges
+  statusActive: 'Active',
+  statusScheduled: 'Scheduled',
+  statusExpired: 'Expired',
+  statusExhausted: 'Fully used',
+  statusInactive: 'Off',
+
+  // Form — sections
+  formCreateTitle: 'New coupon',
+  formEditTitle: 'Edit coupon',
+  sectionBasics: 'Basics',
+  sectionDiscount: 'Discount',
+  sectionScope: 'Where it applies',
+  sectionLimits: 'Limits',
+  sectionAvailability: 'Availability',
+
+  // Form — fields
+  fieldCode: 'Code',
+  fieldCodeHint: 'Letters, numbers, hyphens. Not case-sensitive for customers.',
+  fieldTitle: 'Title',
+  fieldTitleHint: 'Shown to the customer in the app.',
+  fieldDescription: 'Description',
+  fieldDescriptionHint: 'Optional detail under the title.',
+
+  fieldDiscountType: 'Discount type',
+  discountTypePercent: 'Percentage',
+  discountTypeFixed: 'Fixed amount',
+  fieldPercent: 'Percent off',
+  fieldFixedAmount: 'Amount off',
+  fieldMaxDiscount: 'Maximum discount',
+  fieldMaxDiscountHint: 'Leave empty for no cap.',
+  fieldMinPurchase: 'Minimum purchase',
+  fieldMinPurchaseHint: 'Measured before the discount. 0 for no minimum.',
+  fieldCurrency: 'Currency',
+
+  fieldAppliesTo: 'Applies to',
+  appliesToBoth: 'Token packs and subscriptions',
+  appliesToTokenPackage: 'Token packs only',
+  appliesToSubscription: 'Subscriptions only',
+  fieldPackageKeys: 'Limit to token packs',
+  fieldSubscriptionTiers: 'Limit to plans',
+  fieldBillingCycles: 'Limit to billing cycles',
+  scopeAllHint: 'Select none to allow all.',
+
+  fieldMaxRedemptions: 'Total uses',
+  fieldMaxRedemptionsHint: 'Leave empty for unlimited.',
+  fieldPerUserLimit: 'Uses per customer',
+  fieldStartsAt: 'Starts',
+  fieldStartsAtHint: 'Leave empty to start immediately.',
+  fieldExpiresAt: 'Expires',
+  fieldExpiresAtHint: 'Leave empty for no expiry.',
+
+  fieldAudience: 'Who can use it',
+  audiencePublic: 'Anyone — listed in the app',
+  audienceCode: 'Anyone with the code — not listed',
+  audienceGranted: 'Only customers it was given to',
+  audienceHint:
+    'Listed coupons appear on the app’s coupon screen. A code-only coupon never does, so a targeted campaign stays private.',
+  fieldFirstPurchaseOnly: 'First purchase only',
+  fieldActive: 'Switched on',
+
+  // Form actions
+  save: 'Save coupon',
+  saving: 'Saving…',
+  cancel: 'Cancel',
+  edit: 'Edit',
+  delete: 'Delete',
+  deleteTitle: 'Delete coupon?',
+  deleteMessage:
+    'The coupon stops working straight away. Redemptions already made are kept so usage reporting stays accurate.',
+  deleteConfirm: 'Delete',
+
+  // Settings
+  settingsTitle: 'Minimum chargeable amount',
+  settingsBody:
+    'A discount is reduced so the total never falls below this. A zero-value invoice cannot be paid at Xendit.',
+  settingsField: 'Minimum total',
+  settingsSave: 'Save',
+
+  // Feedback
+  loadError: 'Failed to load coupons',
+  saveError: 'Failed to save coupon',
+  duplicateCode: 'That code is already in use',
+  retry: 'Try again',
+  emptyTitle: 'No coupons yet',
+  emptyBody: 'Create one to start offering discounts at checkout.',
+  emptyFiltered: 'No coupons match this filter.',
+  unlimited: 'Unlimited',
+  noExpiry: 'No expiry',
+  perCustomer: 'per customer',
+  usesOf: 'of',
+} as const;
+
+// ─── Coupon usage dashboard ───────────────────────
+export const COUPON_USAGE = {
+  title: 'Coupon usage',
+  subtitle: 'What discounts cost, and what they brought in.',
+
+  // Stat cards
+  redemptions: 'Redemptions',
+  discountGiven: 'Discount given',
+  revenueOnDiscounted: 'Revenue on discounted orders',
+  uniqueUsers: 'Customers',
+  conversionRate: 'Applied → paid',
+  averageDiscount: 'Average discount',
+  couponShare: 'Share of paid orders',
+  stillOpen: 'Applied, not yet paid',
+  vsPrevious: 'vs previous period',
+  noPrevious: 'no prior data',
+
+  // Charts
+  discountChartTitle: 'Discount given over time',
+  discountChartSubtitleDay: 'Value discounted per day',
+  discountChartSubtitleMonth: 'Value discounted per month',
+  redemptionChartTitle: 'Redemptions',
+  redemptionChartSubtitleDay: 'Coupons redeemed per day',
+  redemptionChartSubtitleMonth: 'Coupons redeemed per month',
+  topCouponsTitle: 'Discount given by coupon',
+
+  // Recent table
+  recentTitle: 'Recent redemptions',
+  colCoupon: 'Coupon',
+  colUser: 'Customer',
+  colDiscount: 'Discount',
+  colPaid: 'Paid',
+  colStatus: 'Status',
+  colWhen: 'When',
+
+  statusReserved: 'Applied',
+  statusConsumed: 'Paid',
+  statusReleased: 'Abandoned',
+
+  loadError: 'Failed to load coupon usage',
+  retry: 'Try again',
+  emptyTitle: 'No coupons redeemed yet',
+  emptyBody: 'Once a customer checks out with a coupon it will show up here.',
+  emptyChart: 'No coupons redeemed in this period',
+  redemptionOne: 'redemption',
+  redemptionMany: 'redemptions',
 } as const;

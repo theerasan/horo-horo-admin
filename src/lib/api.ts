@@ -23,7 +23,14 @@ import type {
   PaymentSummary,
   PaymentRange,
   PaginatedPayments,
-  PaymentStatus
+  PaymentStatus,
+  Coupon,
+  PaginatedCoupons,
+  CouponInput,
+  CouponRedemption,
+  CouponGrant,
+  CouponSettings,
+  CouponSummary
 } from './types';
 
 function getToken(): string | null {
@@ -351,4 +358,93 @@ export async function getPublishedLegal(
     throw new ApiError(res.status, body.message ?? res.statusText, body.error);
   }
   return res.json();
+}
+
+// ── Coupons ──────────────────────────────────────────────────────────────────
+
+/**
+ * `status` filters on lifecycle rather than the `active` flag alone, because
+ * "is this working right now" is the actual question: an active coupon whose
+ * window has passed or whose quota is spent is not working.
+ */
+export async function listCoupons(
+  page = 1,
+  limit = 20,
+  search?: string,
+  status?: 'active' | 'scheduled' | 'expired' | 'exhausted' | 'inactive'
+): Promise<PaginatedCoupons> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  return request<PaginatedCoupons>(`/api/v1/admin/coupons?${params}`);
+}
+
+export async function getCoupon(id: string): Promise<Coupon> {
+  return request<Coupon>(`/api/v1/admin/coupons/${id}`);
+}
+
+export async function createCoupon(input: CouponInput): Promise<Coupon> {
+  return request<Coupon>('/api/v1/admin/coupons', {
+    method: 'POST',
+    body: JSON.stringify(input)
+  });
+}
+
+/**
+ * Editing changes what future checkouts get. Redemptions already taken keep
+ * their frozen amounts, so a campaign's reported cost never shifts because
+ * someone fixed a typo months later.
+ */
+export async function updateCoupon(id: string, input: CouponInput): Promise<Coupon> {
+  return request<Coupon>(`/api/v1/admin/coupons/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input)
+  });
+}
+
+/** Soft-deletes: the coupon stops working immediately, its history survives. */
+export async function deleteCoupon(id: string): Promise<{ deleted: boolean }> {
+  return request<{ deleted: boolean }>(`/api/v1/admin/coupons/${id}`, { method: 'DELETE' });
+}
+
+export async function listCouponRedemptions(
+  id: string,
+  limit = 50
+): Promise<{ redemptions: CouponRedemption[] }> {
+  return request<{ redemptions: CouponRedemption[] }>(
+    `/api/v1/admin/coupons/${id}/redemptions?limit=${limit}`
+  );
+}
+
+/**
+ * Hands a coupon to one user — a support gesture today, and the same endpoint
+ * the planned post-payment lucky wheel will call, which is why the source is
+ * recorded rather than assumed.
+ */
+export async function grantCoupon(
+  id: string,
+  uid: string,
+  expiresAt: string | null = null
+): Promise<CouponGrant> {
+  return request<CouponGrant>(`/api/v1/admin/coupons/${id}/grants`, {
+    method: 'POST',
+    body: JSON.stringify({ uid, source: 'manual', expires_at: expiresAt })
+  });
+}
+
+/** The coupon dashboard's entire payload for one range, in one request. */
+export async function getCouponSummary(range: PaymentRange): Promise<CouponSummary> {
+  const params = new URLSearchParams({ range });
+  return request<CouponSummary>(`/api/v1/admin/coupons/summary?${params}`);
+}
+
+export async function getCouponSettings(): Promise<CouponSettings> {
+  return request<CouponSettings>('/api/v1/admin/coupons/settings');
+}
+
+export async function updateCouponSettings(minChargeableAmount: number): Promise<CouponSettings> {
+  return request<CouponSettings>('/api/v1/admin/coupons/settings', {
+    method: 'PUT',
+    body: JSON.stringify({ min_chargeable_amount: minChargeableAmount })
+  });
 }
