@@ -10,9 +10,32 @@
   import { PACKAGES } from '$lib/strings';
   import type { SubscriptionPlan, SubscriptionBillingOption, TokenPackage } from '$lib/types';
 
-  type PlanRow = SubscriptionPlan & { draftPrice: number; draftTokensPerDay: number; saving: boolean; saved: boolean; error: string };
+  type PlanRow = SubscriptionPlan & {
+    draftPrice: number;
+    draftCurrency: string;
+    draftTokensPerDay: number;
+    draftActive: boolean;
+    saving: boolean;
+    saved: boolean;
+    error: string;
+  };
   type BillingRow = SubscriptionBillingOption & { draftDiscount: number; saving: boolean; saved: boolean; error: string };
-  type PackRow = TokenPackage & { draftTokens: number; draftPrice: number; saving: boolean; saved: boolean; error: string };
+  /**
+   * `draftOriginalPrice` is a string, not a number: the field has a meaningful
+   * empty state ("not on sale") that a number input models as NaN, and NaN
+   * compares unequal to itself, which would make the row permanently dirty.
+   */
+  type PackRow = TokenPackage & {
+    draftTokens: number;
+    draftPrice: number;
+    draftCurrency: string;
+    draftOriginalPrice: string;
+    draftPopular: boolean;
+    draftActive: boolean;
+    saving: boolean;
+    saved: boolean;
+    error: string;
+  };
 
   let loading = $state(true);
   let error = $state('');
@@ -43,7 +66,9 @@
       planRows = cfg.subscription_plans.map((p) => ({
         ...p,
         draftPrice: p.price,
+        draftCurrency: p.currency ?? 'THB',
         draftTokensPerDay: p.tokens_per_day,
+        draftActive: p.active ?? true,
         saving: false,
         saved: false,
         error: ''
@@ -61,6 +86,10 @@
         ...p,
         draftTokens: p.tokens,
         draftPrice: p.price,
+        draftCurrency: p.currency ?? 'THB',
+        draftOriginalPrice: p.original_price == null ? '' : String(p.original_price),
+        draftPopular: p.popular ?? false,
+        draftActive: p.active ?? true,
         saving: false,
         saved: false,
         error: ''
@@ -70,6 +99,15 @@
     } finally {
       loading = false;
     }
+  }
+
+  /**
+   * Shape check only — three A–Z letters. Maintaining a list of every code
+   * Xendit supports here would go stale faster than it caught a typo, and the
+   * server rejects an unsupported one when it creates the invoice.
+   */
+  function isValidCurrency(code: string): boolean {
+    return /^[A-Za-z]{3}$/.test(code.trim());
   }
 
   function formatDate(d: string) {
@@ -114,7 +152,12 @@
   // ── Subscription plans ───────────────────────────────────────────────────────
 
   function planDirty(r: PlanRow) {
-    return r.draftPrice !== r.price || r.draftTokensPerDay !== r.tokens_per_day;
+    return (
+      r.draftPrice !== r.price ||
+      r.draftCurrency !== (r.currency ?? 'THB') ||
+      r.draftTokensPerDay !== r.tokens_per_day ||
+      r.draftActive !== (r.active ?? true)
+    );
   }
 
   async function savePlan(r: PlanRow) {
@@ -126,16 +169,29 @@
       r.error = PACKAGES.tokensPerDayInvalid;
       return;
     }
+    if (!isValidCurrency(r.draftCurrency)) {
+      r.error = PACKAGES.currencyInvalid;
+      return;
+    }
     r.saving = true;
     r.saved = false;
     r.error = '';
     try {
-      const updated = await updateSubscriptionPlan(r.tier, r.draftPrice, r.draftTokensPerDay);
+      const updated = await updateSubscriptionPlan(r.tier, {
+        price: r.draftPrice,
+        currency: r.draftCurrency,
+        tokens_per_day: r.draftTokensPerDay,
+        active: r.draftActive
+      });
       r.price = updated.price;
+      r.currency = updated.currency;
       r.tokens_per_day = updated.tokens_per_day;
+      r.active = updated.active;
       r.updated_at = updated.updated_at;
       r.draftPrice = updated.price;
+      r.draftCurrency = updated.currency;
       r.draftTokensPerDay = updated.tokens_per_day;
+      r.draftActive = updated.active;
       r.saved = true;
       setTimeout(() => (r.saved = false), 2000);
     } catch (e: any) {
@@ -176,7 +232,33 @@
   // ── Token packages ───────────────────────────────────────────────────────────
 
   function packDirty(r: PackRow) {
-    return r.draftTokens !== r.tokens || r.draftPrice !== r.price;
+    return (
+      r.draftTokens !== r.tokens ||
+      r.draftPrice !== r.price ||
+      r.draftCurrency !== (r.currency ?? 'THB') ||
+      r.draftOriginalPrice !== (r.original_price == null ? '' : String(r.original_price)) ||
+      r.draftPopular !== (r.popular ?? false) ||
+      r.draftActive !== (r.active ?? true)
+    );
+  }
+
+  /** The typed "was" price, or null for the empty (not-on-sale) field. */
+  function parsedOriginalPrice(r: PackRow): number | null {
+    const trimmed = r.draftOriginalPrice.trim();
+    if (trimmed === '') return null;
+    const value = Number(trimmed);
+    return Number.isFinite(value) ? value : NaN;
+  }
+
+  /**
+   * Savings the app will render for this pack, or null when it is not on sale.
+   * Shown next to the field so the effect of a "was" price is visible before
+   * saving — the same arithmetic the app's TokenPackage.savingsPercent does.
+   */
+  function draftSavings(r: PackRow): number | null {
+    const original = parsedOriginalPrice(r);
+    if (original == null || Number.isNaN(original) || original <= r.draftPrice) return null;
+    return Math.round(((original - r.draftPrice) / original) * 100);
   }
 
   async function savePack(r: PackRow) {
@@ -188,16 +270,51 @@
       r.error = PACKAGES.priceInvalid;
       return;
     }
+    if (!isValidCurrency(r.draftCurrency)) {
+      r.error = PACKAGES.currencyInvalid;
+      return;
+    }
+    const originalPrice = parsedOriginalPrice(r);
+    if (originalPrice !== null && (Number.isNaN(originalPrice) || originalPrice < r.draftPrice)) {
+      r.error = PACKAGES.originalPriceInvalid;
+      return;
+    }
     r.saving = true;
     r.saved = false;
     r.error = '';
     try {
-      const updated = await updateTokenPackage(r.key, r.draftTokens, r.draftPrice);
+      const updated = await updateTokenPackage(r.key, {
+        tokens: r.draftTokens,
+        price: r.draftPrice,
+        currency: r.draftCurrency,
+        original_price: originalPrice,
+        popular: r.draftPopular,
+        active: r.draftActive
+      });
       r.tokens = updated.tokens;
       r.price = updated.price;
+      r.currency = updated.currency;
+      r.original_price = updated.original_price ?? null;
+      r.popular = updated.popular;
+      r.active = updated.active;
       r.updated_at = updated.updated_at;
       r.draftTokens = updated.tokens;
       r.draftPrice = updated.price;
+      r.draftCurrency = updated.currency;
+      r.draftOriginalPrice = updated.original_price == null ? '' : String(updated.original_price);
+      r.draftPopular = updated.popular;
+      r.draftActive = updated.active;
+
+      // Only one pack may be "Popular", and the server moves the badge rather
+      // than rejecting the second one — so the rows that just lost it have to
+      // be brought back in line here, or they would sit dirty forever showing
+      // a flag the server no longer has.
+      if (updated.popular) {
+        packRows = packRows.map((other) =>
+          other.key === r.key ? other : { ...other, popular: false, draftPopular: false }
+        );
+      }
+
       r.saved = true;
       setTimeout(() => (r.saved = false), 2000);
     } catch (e: any) {
@@ -285,7 +402,9 @@
               <tr class="border-b border-gray-100 dark:border-gray-800 text-left">
                 <th class="px-5 py-3 text-overline">{PACKAGES.colTier}</th>
                 <th class="px-5 py-3 text-overline">{PACKAGES.colPrice}</th>
+                <th class="px-5 py-3 text-overline">{PACKAGES.colCurrency}</th>
                 <th class="px-5 py-3 text-overline">{PACKAGES.colTokensPerDay}</th>
+                <th class="px-5 py-3 text-overline">{PACKAGES.colOnSale}</th>
                 <th class="px-5 py-3 text-overline">{PACKAGES.colUpdated}</th>
                 <th class="px-5 py-3"></th>
               </tr>
@@ -306,6 +425,15 @@
                   </td>
                   <td class="px-5 py-4">
                     <input
+                      type="text"
+                      maxlength="3"
+                      class="form-input w-20 uppercase"
+                      bind:value={r.draftCurrency}
+                      aria-label={`${r.label} currency`}
+                    />
+                  </td>
+                  <td class="px-5 py-4">
+                    <input
                       type="number"
                       min="0"
                       step="1"
@@ -316,6 +444,12 @@
                     {#if r.error}
                       <p class="text-caption text-red-500 mt-1">{r.error}</p>
                     {/if}
+                  </td>
+                  <td class="px-5 py-4">
+                    <label class="toggle">
+                      <input type="checkbox" bind:checked={r.draftActive} aria-label={`${r.label} on sale`} />
+                      <span class="text-caption">{r.draftActive ? PACKAGES.onSale : PACKAGES.withdrawn}</span>
+                    </label>
                   </td>
                   <td class="px-5 py-4 text-caption text-gray-500 dark:text-gray-400">
                     {formatDate(r.updated_at)}
@@ -409,6 +543,10 @@
             <tr class="border-b border-gray-100 dark:border-gray-800 text-left">
               <th class="px-5 py-3 text-overline">{PACKAGES.colTokens}</th>
               <th class="px-5 py-3 text-overline">{PACKAGES.colPackPrice}</th>
+              <th class="px-5 py-3 text-overline">{PACKAGES.colCurrency}</th>
+              <th class="px-5 py-3 text-overline">{PACKAGES.colOriginalPrice}</th>
+              <th class="px-5 py-3 text-overline">{PACKAGES.colPopular}</th>
+              <th class="px-5 py-3 text-overline">{PACKAGES.colOnSale}</th>
               <th class="px-5 py-3 text-overline">{PACKAGES.colUpdated}</th>
               <th class="px-5 py-3"></th>
             </tr>
@@ -439,6 +577,48 @@
                     <p class="text-caption text-red-500 mt-1">{r.error}</p>
                   {/if}
                 </td>
+                <td class="px-5 py-4">
+                  <input
+                    type="text"
+                    maxlength="3"
+                    class="form-input w-20 uppercase"
+                    bind:value={r.draftCurrency}
+                    aria-label={`${r.key} currency`}
+                  />
+                </td>
+                <td class="px-5 py-4">
+                  <!-- type="text" with a decimal inputmode, not type="number":
+                       Svelte coerces a bound number input to a number, and the
+                       empty "not on sale" state would come back as NaN, which
+                       compares unequal to itself and leaves the row forever
+                       dirty. The value is parsed and validated on save. -->
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    class="form-input w-28"
+                    placeholder={PACKAGES.originalPricePlaceholder}
+                    bind:value={r.draftOriginalPrice}
+                    aria-label={`${r.key} original price`}
+                  />
+                  <!-- Shows the discount the app will render, before saving. -->
+                  {#if draftSavings(r) !== null}
+                    <p class="text-caption text-emerald mt-1">−{draftSavings(r)}%</p>
+                  {:else}
+                    <p class="text-caption mt-1">{PACKAGES.notOnSale}</p>
+                  {/if}
+                </td>
+                <td class="px-5 py-4">
+                  <label class="toggle">
+                    <input type="checkbox" bind:checked={r.draftPopular} aria-label={`${r.key} popular`} />
+                    <span class="text-caption">{PACKAGES.popularHint}</span>
+                  </label>
+                </td>
+                <td class="px-5 py-4">
+                  <label class="toggle">
+                    <input type="checkbox" bind:checked={r.draftActive} aria-label={`${r.key} on sale`} />
+                    <span class="text-caption">{r.draftActive ? PACKAGES.onSale : PACKAGES.withdrawn}</span>
+                  </label>
+                </td>
                 <td class="px-5 py-4 text-caption text-gray-500 dark:text-gray-400">
                   {formatDate(r.updated_at)}
                 </td>
@@ -463,3 +643,17 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+  .toggle input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #7c3aed;
+  }
+</style>

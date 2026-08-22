@@ -16,6 +16,73 @@ export const NAV = {
   legal: 'Legal Documents',
   pricing: 'Pricing',
   packages: 'Packages',
+  payments: 'Payments',
+} as const;
+
+// ─── Payments dashboard ───────────────────────────
+export const PAYMENTS = {
+  title: 'Payments',
+  subtitle: 'Xendit checkout revenue, settled transactions, and where the money comes from.',
+
+  // Range selector
+  ranges: [
+    { key: '7d', label: '7 days' },
+    { key: '30d', label: '30 days' },
+    { key: '1y', label: '12 months' },
+  ],
+  rangeLabel: 'Period',
+
+  // Environment filter
+  envAll: 'All environments',
+  envStaging: 'Staging',
+  envProduction: 'Production',
+  envLabel: 'Environment',
+
+  // Stat cards
+  revenue: 'Revenue',
+  transactions: 'Paid transactions',
+  payingUsers: 'Paying users',
+  averageOrder: 'Average order',
+  successRate: 'Success rate',
+  tokensSold: 'Tokens sold',
+  vsPrevious: 'vs previous period',
+  noPrevious: 'no prior data',
+
+  // Charts
+  revenueChartTitle: 'Revenue over time',
+  revenueChartSubtitleDay: 'Settled revenue per day',
+  revenueChartSubtitleMonth: 'Settled revenue per month',
+  volumeChartTitle: 'Paid transactions',
+  volumeChartSubtitleDay: 'Count of settled payments per day',
+  volumeChartSubtitleMonth: 'Count of settled payments per month',
+  byProductTitle: 'Revenue by product',
+  byChannelTitle: 'Revenue by payment channel',
+
+  // Recent activity
+  recentTitle: 'Recent checkouts',
+  viewAll: 'View all',
+  colReference: 'Reference',
+  colUser: 'User',
+  colProduct: 'Product',
+  colAmount: 'Amount',
+  colStatus: 'Status',
+  colChannel: 'Channel',
+  colCreated: 'Created',
+
+  // Status labels
+  statusPaid: 'Paid',
+  statusPending: 'Pending',
+  statusFailed: 'Failed',
+  statusExpired: 'Expired',
+
+  // Empty / error
+  loadError: 'Failed to load payment data',
+  retry: 'Try again',
+  emptyTitle: 'No payments yet',
+  emptyBody: 'Once a checkout is completed through Xendit it will show up here.',
+  emptyChart: 'No settled payments in this period',
+  tokensUnit: 'tokens',
+  subscriptionLabel: 'Subscription',
 } as const;
 
 // ─── Pricing ──────────────────────────────────────
@@ -316,6 +383,17 @@ export const PACKAGES = {
   tokenPackagesTitle: 'Token Packages',
   tokenPackagesSubtitle: 'One-time top-up packs — set the token amount and price for each.',
   colTokens: 'Tokens',
+  colCurrency: 'Currency',
+  colOriginalPrice: 'Was (list price)',
+  colPopular: 'Popular',
+  colOnSale: 'Status',
+  onSale: 'On sale',
+  withdrawn: 'Withdrawn',
+  notOnSale: 'Not on sale',
+  popularHint: 'Highlight',
+  originalPricePlaceholder: 'None',
+  currencyInvalid: 'Use a 3-letter ISO code, e.g. THB',
+  originalPriceInvalid: 'List price must be at least the current price',
   colPackPrice: 'Price',
   tokensInvalid: 'Tokens must be greater than 0',
 

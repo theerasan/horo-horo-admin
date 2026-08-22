@@ -156,6 +156,10 @@ export interface VideoRewardConfig {
 export type SubscriptionTier = 'basic' | 'pro' | 'premium';
 
 export interface SubscriptionPlan {
+  /** ISO code the price is charged in. Per-plan, not one global setting. */
+  currency: string;
+  /** False when the plan is withdrawn — hidden from clients, refused at checkout. */
+  active: boolean;
   tier: SubscriptionTier;
   label: string;
   price: number;
@@ -175,6 +179,14 @@ export interface SubscriptionBillingOption {
 }
 
 export interface TokenPackage {
+  /** ISO code the price is charged in. */
+  currency: string;
+  /** Pre-discount "was" price, or null when the pack is not on sale. */
+  original_price: number | null;
+  /** Marks the recommended pick. At most one pack may carry it. */
+  popular: boolean;
+  /** False when the pack is withdrawn — hidden from clients, refused at checkout. */
+  active: boolean;
   key: string;
   tokens: number;
   price: number;
@@ -202,4 +214,94 @@ export interface AdminUpdateUserRequest {
   place_of_birth?: string;
   place_latitude?: number;
   place_longitude?: number;
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+export type PaymentKind = 'token_package' | 'subscription';
+export type PaymentStatus = 'pending' | 'paid' | 'expired' | 'failed';
+export type PaymentEnvironment = 'staging' | 'production';
+
+/** The three windows the payments dashboard charts. */
+export type PaymentRange = '7d' | '30d' | '1y';
+
+export interface PaymentTransaction {
+  id: string;
+  user_uid?: string;
+  user_email?: string;
+  reference_id: string;
+  provider: string;
+  provider_invoice_id?: string | null;
+  invoice_url?: string | null;
+  kind: PaymentKind;
+  package_key?: string | null;
+  subscription_tier?: string | null;
+  billing_cycle?: string | null;
+  tokens: number;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_method?: string | null;
+  payment_channel?: string | null;
+  failure_reason?: string | null;
+  paid_at?: string | null;
+  expires_at?: string | null;
+  environment: PaymentEnvironment;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedPayments {
+  data: PaymentTransaction[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+/**
+ * One bucket on the revenue chart. `bucket` is an ISO date at bucket
+ * precision — a day for the 7d/30d ranges, the first of the month for 1y —
+ * so the client formats it for its own locale.
+ */
+export interface PaymentSeriesPoint {
+  bucket: string;
+  revenue: number;
+  transactions: number;
+  tokens: number;
+}
+
+export interface PaymentBreakdownItem {
+  key: string;
+  label: string;
+  revenue: number;
+  transactions: number;
+}
+
+export interface PaymentTotals {
+  revenue: number;
+  transactions: number;
+  tokens: number;
+  paying_users: number;
+  average_order_value: number;
+  pending: number;
+  failed: number;
+  expired: number;
+  /** Paid ÷ settled attempts, 0–100. Pending attempts are excluded. */
+  success_rate: number;
+}
+
+export interface PaymentSummary {
+  range: PaymentRange;
+  /** 'day' or 'month' — what one point on the series covers. */
+  bucket: string;
+  currency: string;
+  environment: string;
+  totals: PaymentTotals;
+  /** The equally-long window immediately before, for "vs previous" deltas. */
+  previous_totals: PaymentTotals;
+  series: PaymentSeriesPoint[];
+  by_product: PaymentBreakdownItem[];
+  by_channel: PaymentBreakdownItem[];
+  recent: PaymentTransaction[];
 }

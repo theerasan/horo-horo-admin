@@ -17,7 +17,12 @@ import type {
   VideoRewardConfig,
   SubscriptionPlan,
   SubscriptionBillingOption,
-  TokenPackage
+  TokenPackage,
+  PaymentSummary,
+  PaymentRange,
+  PaginatedPayments,
+  PaymentStatus,
+  PaymentEnvironment
 } from './types';
 
 function getToken(): string | null {
@@ -214,14 +219,23 @@ export async function updateVideoReward(tokensPerVideo: number): Promise<VideoRe
   });
 }
 
+/**
+ * Rewrites a tier's commercial terms. The whole row is submitted, not a patch —
+ * omitting `active` would read as "leave on sale", which is the safe default
+ * but not the same as "don't change it".
+ */
 export async function updateSubscriptionPlan(
   tier: string,
-  price: number,
-  tokensPerDay: number
+  update: {
+    price: number;
+    currency: string;
+    tokens_per_day: number;
+    active: boolean;
+  }
 ): Promise<SubscriptionPlan> {
   return request<SubscriptionPlan>(`/api/v1/admin/packages/subscription-plans/${tier}`, {
     method: 'PUT',
-    body: JSON.stringify({ price, tokens_per_day: tokensPerDay })
+    body: JSON.stringify(update)
   });
 }
 
@@ -235,15 +249,56 @@ export async function updateBillingOption(
   });
 }
 
+/**
+ * Rewrites a token pack's commercial terms. `original_price: null` explicitly
+ * takes the pack off sale pricing — there is no "leave unchanged" for it.
+ *
+ * Setting `popular: true` moves the badge: the server clears it from whichever
+ * pack held it, so the caller must refresh the other rows afterwards.
+ */
 export async function updateTokenPackage(
   key: string,
-  tokens: number,
-  price: number
+  update: {
+    tokens: number;
+    price: number;
+    currency: string;
+    original_price: number | null;
+    popular: boolean;
+    active: boolean;
+  }
 ): Promise<TokenPackage> {
   return request<TokenPackage>(`/api/v1/admin/packages/token-packages/${key}`, {
     method: 'PUT',
-    body: JSON.stringify({ tokens, price })
+    body: JSON.stringify(update)
   });
+}
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+
+/**
+ * The payments dashboard's entire payload for one range — totals, the time
+ * series, both breakdowns, and the recent activity list. One request per range
+ * change rather than four.
+ */
+export async function getPaymentSummary(
+  range: PaymentRange,
+  environment?: PaymentEnvironment
+): Promise<PaymentSummary> {
+  const params = new URLSearchParams({ range });
+  if (environment) params.set('environment', environment);
+  return request<PaymentSummary>(`/api/v1/admin/payments/summary?${params}`);
+}
+
+export async function listPaymentTransactions(
+  page = 1,
+  limit = 20,
+  status?: PaymentStatus,
+  environment?: PaymentEnvironment
+): Promise<PaginatedPayments> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status) params.set('status', status);
+  if (environment) params.set('environment', environment);
+  return request<PaginatedPayments>(`/api/v1/admin/payments/transactions?${params}`);
 }
 
 // Public (no auth) — used to preview
